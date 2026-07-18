@@ -52648,7 +52648,7 @@ const createMotionComponent = /* @__PURE__ */ createMotionComponentFactory({
   ...layout
 }, createDomVisualElement);
 const motion = /* @__PURE__ */ createDOMMotionComponentProxy(createMotionComponent);
-const Scene2 = React.lazy(() => __vitePreload(() => import("./Scene-9Wol2Jg2.js"), true ? [] : void 0));
+const Scene2 = React.lazy(() => __vitePreload(() => import("./Scene-BtogP6n2.js"), true ? [] : void 0));
 function MagneticButton({ children, className, ...props }) {
   const ref = reactExports.useRef(null);
   const [position, setPosition] = reactExports.useState({ x: 0, y: 0 });
@@ -52756,70 +52756,75 @@ function App() {
     setIsMounted(true);
   }, []);
   if (!isMounted) return null;
-  return (
-    // REMOVED REACT-LENIS ENTIRELY
-    /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "relative w-full bg-transparent text-white overflow-hidden selection:bg-[#00ffa6] selection:text-black", children: [
-      /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "fixed inset-0 w-full h-full -z-10 pointer-events-none bg-black", children: /* @__PURE__ */ jsxRuntimeExports.jsx(reactExports.Suspense, { fallback: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-full h-full flex items-center justify-center text-[#00ffa6]", children: "Initializing Core..." }), children: /* @__PURE__ */ jsxRuntimeExports.jsx(
-        Canvas2,
-        {
-          className: "w-full h-full block",
-          gl: { antialias: false, powerPreference: "high-performance", toneMapping: 0 },
-          dpr: [1, 1.5],
-          camera: { position: [0, 0, 5], fov: 45 },
-          children: /* @__PURE__ */ jsxRuntimeExports.jsx(Scene2, {})
-        }
-      ) }) }),
-      /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "relative w-full min-h-screen flex flex-col justify-between p-6 md:p-10 pointer-events-none", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("header", { className: "flex justify-between items-center pointer-events-auto", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-bold tracking-widest text-sm uppercase", children: "Shadow DevX" }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-bold tracking-widest text-sm uppercase cursor-pointer", children: "MENU" })
-        ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsxs("main", { className: "w-full max-w-xl flex flex-col gap-4 md:gap-6 pointer-events-auto bg-black/40 backdrop-blur-xl p-6 md:p-8 rounded-3xl border border-white/10", children: [
-          /* @__PURE__ */ jsxRuntimeExports.jsx(FadeUp, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs("h1", { className: "text-4xl md:text-6xl font-black tracking-tighter leading-none uppercase", children: [
-            "Shadow",
-            /* @__PURE__ */ jsxRuntimeExports.jsx("br", {}),
-            /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-cyan-400", children: "DevX." })
-          ] }) }),
-          /* @__PURE__ */ jsxRuntimeExports.jsx(FadeUp, { delay: 0.1, children: /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-gray-400 text-xs md:text-sm", children: "Zero junk UI. Every element serves a purpose. I build premium, fluid landing pages that convert traffic into high-end clients." }) }),
-          /* @__PURE__ */ jsxRuntimeExports.jsxs(FadeUp, { delay: 0.2, className: "flex flex-col sm:flex-row gap-3 md:gap-4 mt-2", children: [
-            /* @__PURE__ */ jsxRuntimeExports.jsx(MagneticButton, { className: "bg-white text-black font-semibold px-6 py-3 rounded-full text-sm md:text-base border border-transparent hover:border-white/50 hover:shadow-[0_0_20px_rgba(255,255,255,0.3)] transition-colors", children: "Start Project" }),
-            /* @__PURE__ */ jsxRuntimeExports.jsx(MagneticButton, { className: "border border-white/20 font-semibold px-6 py-3 rounded-full hover:bg-white/10 transition-colors text-sm md:text-base", children: "Explore Work" })
-          ] })
-        ] }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx("div", {})
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "relative w-full bg-transparent text-white overflow-hidden selection:bg-[#00ffa6] selection:text-black", children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx(
+      "div",
+      {
+        className: "fixed inset-0 -z-10 bg-black",
+        style: { width: "100vw", height: "100vh", overflow: "hidden" },
+        children: /* @__PURE__ */ jsxRuntimeExports.jsx(reactExports.Suspense, { fallback: /* @__PURE__ */ jsxRuntimeExports.jsx("div", { className: "w-full h-full flex items-center justify-center text-[#00ffa6]", children: "Initializing Core..." }), children: /* @__PURE__ */ jsxRuntimeExports.jsx(
+          Canvas2,
+          {
+            className: "w-full h-full block",
+            gl: { antialias: false, powerPreference: "high-performance", toneMapping: 0 },
+            dpr: [1, 1.5],
+            camera: { position: [0, 0, 5], fov: 45 },
+            children: /* @__PURE__ */ jsxRuntimeExports.jsx(Scene2, {})
+          }
+        ) })
+      }
+    ),
+    /* @__PURE__ */ jsxRuntimeExports.jsxs("section", { className: "relative w-full min-h-screen flex flex-col justify-between p-6 md:p-10 pointer-events-none", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("header", { className: "flex justify-between items-center pointer-events-auto", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-bold tracking-widest text-sm uppercase", children: "Shadow DevX" }),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "font-bold tracking-widest text-sm uppercase cursor-pointer", children: "MENU" })
       ] }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("section", { className: "relative w-full min-h-screen flex flex-col justify-center items-end p-6 md:p-10 md:pr-24 pointer-events-none", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "w-full max-w-xl flex flex-col gap-4 md:gap-6 pointer-events-auto bg-black/40 backdrop-blur-xl p-6 md:p-8 rounded-3xl border border-white/10 text-left md:text-right", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx(FadeUp, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs("h2", { className: "text-3xl md:text-5xl font-black tracking-tighter leading-none uppercase", children: [
-          "My ",
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-[#5b00ff]", children: "Story." })
-        ] }) }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(FadeUp, { delay: 0.1, children: /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-gray-400 text-xs md:text-sm md:ml-auto", children: "I am a Lead Creative Developer obsessed with the intersection of design and engineering. I specialize in crafting high-end, WebGL-powered digital experiences that push the boundaries of what is possible in the browser. Every pixel has a purpose." }) })
-      ] }) }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("section", { className: "relative w-full min-h-screen flex flex-col justify-center items-start p-6 md:p-10 pointer-events-none", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "w-full max-w-xl flex flex-col gap-4 md:gap-6 pointer-events-auto bg-black/40 backdrop-blur-xl p-6 md:p-8 rounded-3xl border border-white/10 text-left", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx(FadeUp, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs("h2", { className: "text-3xl md:text-5xl font-black tracking-tighter leading-none uppercase", children: [
-          "Selected ",
+      /* @__PURE__ */ jsxRuntimeExports.jsxs("main", { className: "w-full max-w-xl flex flex-col gap-4 md:gap-6 pointer-events-auto bg-black/40 backdrop-blur-xl p-6 md:p-8 rounded-3xl border border-white/10", children: [
+        /* @__PURE__ */ jsxRuntimeExports.jsx(FadeUp, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs("h1", { className: "text-4xl md:text-6xl font-black tracking-tighter leading-none uppercase", children: [
+          "Shadow",
           /* @__PURE__ */ jsxRuntimeExports.jsx("br", {}),
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-[#00ffa6]", children: "Works." })
+          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-cyan-400", children: "DevX." })
         ] }) }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(FadeUp, { delay: 0.1, children: /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-gray-400 text-xs md:text-sm", children: "Award-winning digital experiences crafted for industry leaders. We blend cutting-edge WebGL with flawless typography to create immersive digital products." }) }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(FadeUp, { delay: 0.2, className: "flex justify-start gap-4 mt-2 md:mt-4", children: /* @__PURE__ */ jsxRuntimeExports.jsx(MagneticButton, { className: "bg-[#00ffa6] text-black font-semibold px-6 py-3 rounded-full shadow-[0_0_20px_rgba(0,255,166,0.2)] border border-transparent hover:border-white/50 hover:shadow-[0_0_30px_rgba(0,255,166,0.5)] transition-colors text-sm md:text-base", children: "View Case Studies" }) })
+        /* @__PURE__ */ jsxRuntimeExports.jsx(FadeUp, { delay: 0.1, children: /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-gray-400 text-xs md:text-sm", children: "Zero junk UI. Every element serves a purpose. I build premium, fluid landing pages that convert traffic into high-end clients." }) }),
+        /* @__PURE__ */ jsxRuntimeExports.jsxs(FadeUp, { delay: 0.2, className: "flex flex-col sm:flex-row gap-3 md:gap-4 mt-2", children: [
+          /* @__PURE__ */ jsxRuntimeExports.jsx(MagneticButton, { className: "bg-white text-black font-semibold px-6 py-3 rounded-full text-sm md:text-base border border-transparent hover:border-white/50 hover:shadow-[0_0_20px_rgba(255,255,255,0.3)] transition-colors", children: "Start Project" }),
+          /* @__PURE__ */ jsxRuntimeExports.jsx(MagneticButton, { className: "border border-white/20 font-semibold px-6 py-3 rounded-full hover:bg-white/10 transition-colors text-sm md:text-base", children: "Explore Work" })
+        ] })
+      ] }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx("div", {})
+    ] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("section", { className: "relative w-full min-h-screen flex flex-col justify-center items-end p-6 md:p-10 md:pr-24 pointer-events-none", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "w-full max-w-xl flex flex-col gap-4 md:gap-6 pointer-events-auto bg-black/40 backdrop-blur-xl p-6 md:p-8 rounded-3xl border border-white/10 text-left md:text-right", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(FadeUp, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs("h2", { className: "text-3xl md:text-5xl font-black tracking-tighter leading-none uppercase", children: [
+        "My ",
+        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-[#5b00ff]", children: "Story." })
       ] }) }),
-      /* @__PURE__ */ jsxRuntimeExports.jsx("section", { className: "relative w-full min-h-screen flex flex-col justify-center items-center p-6 md:p-10 pointer-events-none pb-24", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "w-full max-w-2xl text-center flex flex-col items-center pointer-events-auto bg-black/40 backdrop-blur-xl p-8 md:p-12 rounded-3xl border border-white/10", children: [
-        /* @__PURE__ */ jsxRuntimeExports.jsx(FadeUp, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs("h2", { className: "text-4xl md:text-7xl font-black tracking-tighter leading-none uppercase", children: [
-          "Let's ",
-          /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-transparent bg-clip-text bg-gradient-to-r from-[#00ffa6] to-[#1dbf73]", children: "Talk." })
-        ] }) }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(FadeUp, { delay: 0.1, children: /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-gray-400 text-xs md:text-base max-w-md mx-auto mt-4", children: "Ready to elevate your digital presence? Send a message directly to my inbox." }) }),
-        /* @__PURE__ */ jsxRuntimeExports.jsx(ContactForm, {})
-      ] }) })
-    ] })
-  );
+      /* @__PURE__ */ jsxRuntimeExports.jsx(FadeUp, { delay: 0.1, children: /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-gray-400 text-xs md:text-sm md:ml-auto", children: "I am a Lead Creative Developer obsessed with the intersection of design and engineering. I specialize in crafting high-end, WebGL-powered digital experiences that push the boundaries of what is possible in the browser. Every pixel has a purpose." }) })
+    ] }) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("section", { className: "relative w-full min-h-screen flex flex-col justify-center items-start p-6 md:p-10 pointer-events-none", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "w-full max-w-xl flex flex-col gap-4 md:gap-6 pointer-events-auto bg-black/40 backdrop-blur-xl p-6 md:p-8 rounded-3xl border border-white/10 text-left", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(FadeUp, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs("h2", { className: "text-3xl md:text-5xl font-black tracking-tighter leading-none uppercase", children: [
+        "Selected ",
+        /* @__PURE__ */ jsxRuntimeExports.jsx("br", {}),
+        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-[#00ffa6]", children: "Works." })
+      ] }) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(FadeUp, { delay: 0.1, children: /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-gray-400 text-xs md:text-sm", children: "Award-winning digital experiences crafted for industry leaders. We blend cutting-edge WebGL with flawless typography to create immersive digital products." }) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(FadeUp, { delay: 0.2, className: "flex justify-start gap-4 mt-2 md:mt-4", children: /* @__PURE__ */ jsxRuntimeExports.jsx(MagneticButton, { className: "bg-[#00ffa6] text-black font-semibold px-6 py-3 rounded-full shadow-[0_0_20px_rgba(0,255,166,0.2)] border border-transparent hover:border-white/50 hover:shadow-[0_0_30px_rgba(0,255,166,0.5)] transition-colors text-sm md:text-base", children: "View Case Studies" }) })
+    ] }) }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("section", { className: "relative w-full min-h-screen flex flex-col justify-center items-center p-6 md:p-10 pointer-events-none pb-24", children: /* @__PURE__ */ jsxRuntimeExports.jsxs("div", { className: "w-full max-w-2xl text-center flex flex-col items-center pointer-events-auto bg-black/40 backdrop-blur-xl p-8 md:p-12 rounded-3xl border border-white/10", children: [
+      /* @__PURE__ */ jsxRuntimeExports.jsx(FadeUp, { children: /* @__PURE__ */ jsxRuntimeExports.jsxs("h2", { className: "text-4xl md:text-7xl font-black tracking-tighter leading-none uppercase", children: [
+        "Let's ",
+        /* @__PURE__ */ jsxRuntimeExports.jsx("span", { className: "text-transparent bg-clip-text bg-gradient-to-r from-[#00ffa6] to-[#1dbf73]", children: "Talk." })
+      ] }) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(FadeUp, { delay: 0.1, children: /* @__PURE__ */ jsxRuntimeExports.jsx("p", { className: "text-gray-400 text-xs md:text-base max-w-md mx-auto mt-4", children: "Ready to elevate your digital presence? Send a message directly to my inbox." }) }),
+      /* @__PURE__ */ jsxRuntimeExports.jsx(ContactForm, {})
+    ] }) })
+  ] });
 }
 client.createRoot(document.getElementById("root")).render(
   /* @__PURE__ */ jsxRuntimeExports.jsx(React.StrictMode, { children: /* @__PURE__ */ jsxRuntimeExports.jsx(App, {}) })
 );
 export {
   AdditiveBlending as A,
+  BackSide as B,
   Color as C,
   Euler as E,
   Matrix4 as M,

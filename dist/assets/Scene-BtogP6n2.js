@@ -1,4 +1,4 @@
-import { V as Vector2, a as Vector3, Q as Quaternion, M as Matrix4, S as Spherical, b as Vector4, C as Color, E as Euler, u as useThree, r as reactExports, c as useFrame, d as useLoader, T as TextureLoader, e as Texture, R as REVISION, A as AdditiveBlending, f as ShaderMaterial, j as jsxRuntimeExports, g as MathUtils } from "./index-CZeA2WPT.js";
+import { V as Vector2, a as Vector3, Q as Quaternion, M as Matrix4, S as Spherical, b as Vector4, C as Color, E as Euler, u as useThree, r as reactExports, c as useFrame, d as useLoader, T as TextureLoader, e as Texture, R as REVISION, A as AdditiveBlending, f as ShaderMaterial, j as jsxRuntimeExports, B as BackSide, g as MathUtils } from "./index-BY-C1cvz.js";
 function _defineProperty(obj, key, value) {
   if (key in obj) {
     Object.defineProperty(obj, key, {
@@ -708,6 +708,13 @@ const Stars = /* @__PURE__ */ reactExports.forwardRef(({
     vertexColors: true
   }));
 });
+function GalaxyBackground() {
+  const texture = useTexture("/textures/milky_way.jpg");
+  return /* @__PURE__ */ jsxRuntimeExports.jsxs("mesh", { children: [
+    /* @__PURE__ */ jsxRuntimeExports.jsx("sphereGeometry", { args: [100, 64, 64] }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("meshBasicMaterial", { map: texture, side: BackSide })
+  ] });
+}
 function CameraRig() {
   const scroll = useScroll();
   useFrame((state) => {
@@ -764,17 +771,17 @@ function PhotorealisticEarth() {
 }
 function Scene() {
   return /* @__PURE__ */ jsxRuntimeExports.jsxs(jsxRuntimeExports.Fragment, { children: [
-    /* @__PURE__ */ jsxRuntimeExports.jsx("color", { attach: "background", args: ["#000000"] }),
     /* @__PURE__ */ jsxRuntimeExports.jsx(Stars, { radius: 150, depth: 50, count: 1e4, factor: 6, saturation: 0, fade: true, speed: 1 }),
-    /* @__PURE__ */ jsxRuntimeExports.jsx("ambientLight", { intensity: 0.02 }),
+    /* @__PURE__ */ jsxRuntimeExports.jsx("ambientLight", { intensity: 1.5 }),
     /* @__PURE__ */ jsxRuntimeExports.jsx(
       "directionalLight",
       {
         position: [5, 3, 5],
-        intensity: 2,
+        intensity: 2.5,
         color: "#ffffff"
       }
     ),
+    /* @__PURE__ */ jsxRuntimeExports.jsx(reactExports.Suspense, { fallback: null, children: /* @__PURE__ */ jsxRuntimeExports.jsx(GalaxyBackground, {}) }),
     /* @__PURE__ */ jsxRuntimeExports.jsxs(ScrollControls, { pages: 3, damping: 0.25, children: [
       /* @__PURE__ */ jsxRuntimeExports.jsx(CameraRig, {}),
       /* @__PURE__ */ jsxRuntimeExports.jsx(reactExports.Suspense, { fallback: null, children: /* @__PURE__ */ jsxRuntimeExports.jsx(PhotorealisticEarth, {}) })
