@@ -1,9 +1,12 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect, Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { useForm, ValidationError } from '@formspree/react';
 import { ReactLenis } from '@studio-freight/react-lenis';
 import { motion } from 'framer-motion';
-import Scene from './Scene';
+
+// 1. DYNAMICALLY IMPORT THE SCENE
+// This completely defers the loading of any Three.js objects or hooks until the client renders
+const Scene = React.lazy(() => import('./Scene'));
 
 // Magnetic Button Wrapper
 function MagneticButton({ children, className, ...props }) {
@@ -11,11 +14,11 @@ function MagneticButton({ children, className, ...props }) {
   const [position, setPosition] = useState({ x: 0, y: 0 });
 
   const handleMouse = (e) => {
+    if (!ref.current) return;
     const { clientX, clientY } = e;
     const { height, width, left, top } = ref.current.getBoundingClientRect();
     const middleX = clientX - (left + width / 2);
     const middleY = clientY - (top + height / 2);
-    // Slight pull towards the cursor (0.15 intensity)
     setPosition({ x: middleX * 0.15, y: middleY * 0.15 });
   };
 
@@ -37,17 +40,19 @@ function MagneticButton({ children, className, ...props }) {
 }
 
 // Fade in slide up animation wrapper
-const FadeUp = ({ children, delay = 0, className = "" }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 30 }}
-    whileInView={{ opacity: 1, y: 0 }}
-    viewport={{ once: true, margin: "-50px" }}
-    transition={{ duration: 0.8, ease: "easeOut", delay }}
-    className={className}
-  >
-    {children}
-  </motion.div>
-);
+function FadeUp({ children, delay = 0, className = "" }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-50px" }}
+      transition={{ duration: 0.8, ease: "easeOut", delay }}
+      className={className}
+    >
+      {children}
+    </motion.div>
+  );
+}
 
 function ContactForm() {
   const [state, handleSubmit] = useForm("YOUR_FORMSPREE_ID");
@@ -121,12 +126,20 @@ function ContactForm() {
 }
 
 export default function App() {
+  const [isMounted, setIsMounted] = useState(false);
+
+  // 2. SAFEGUARD: Only mount the scene after the client has fully hydrated.
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  if (!isMounted) return null;
+
   return (
-    // ReactLenis replaces ScrollControls with native scroll hijacking for 0.1 buttery lerp
     <ReactLenis root options={{ lerp: 0.1, smoothWheel: true }}>
       <div className="relative w-full bg-transparent text-white overflow-hidden selection:bg-[#00ffa6] selection:text-black">
         
-        {/* Isolated Canvas Background - Fixed directly to background z-10 */}
+        {/* Isolated Canvas Background - fixed behind normal DOM */}
         <div className="fixed inset-0 w-full h-full -z-10 pointer-events-none">
           <Canvas 
             className="w-full h-full block"
@@ -134,12 +147,13 @@ export default function App() {
             dpr={[1, 1.5]} 
             camera={{ position: [0, 0, 5], fov: 45 }}
           >
-            <Scene />
+            {/* 3. SUSPENSE BOUNDARY: Prevents R3F hook parsing errors during build */}
+            <Suspense fallback={null}>
+              <Scene />
+            </Suspense>
           </Canvas>
         </div>
 
-        {/* DOM Flow Content - Naturally scrolling vertically over the fixed Canvas */}
-        
         {/* PAGE 1: HERO */}
         <section className="relative w-full min-h-screen flex flex-col justify-between p-6 md:p-10 pointer-events-none">
           <header className="flex justify-between items-center pointer-events-auto">
