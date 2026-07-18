@@ -1,108 +1,127 @@
-import React, { useRef, Suspense } from 'react';
+import React, { useRef, useMemo, Suspense, useState } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Stars, ScrollControls, useScroll, useTexture } from '@react-three/drei';
+import { ScrollControls, useScroll, useTexture, OrbitControls, Float } from '@react-three/drei';
 import * as THREE from 'three';
 
+// 1. SCROLL CAMERA LOGIC
+function CameraRig() {
+  const scroll = useScroll();
+  useFrame((state) => {
+    // Lerp the Z position for scroll depth.
+    // NOTE: Removed state.camera.lookAt(0,0,0) so it doesn't fight with OrbitControls!
+    state.camera.position.z = THREE.MathUtils.lerp(15, 5, scroll.offset);
+  });
+  return null;
+}
+
+// 2. REALISTIC GALAXY BACKGROUND
 function GalaxyBackground() {
   const texture = useTexture('/textures/milky_way.jpg');
   return (
     <mesh>
       <sphereGeometry args={[100, 64, 64]} />
-      {/* THREE.BackSide renders the texture on the INSIDE of the sphere */}
       <meshBasicMaterial map={texture} side={THREE.BackSide} />
     </mesh>
   );
 }
 
-function CameraRig() {
-  const scroll = useScroll();
-
-  useFrame((state) => {
-    // scroll.offset goes from 0 (top) to 1 (bottom)
-    const startZ = 15;
-    const endZ = 5; // End at z=5 so the camera doesn't clip inside the Earth (radius=2)
-    
-    // Smoothly interpolate the camera's Z position based on scroll progress
-    state.camera.position.z = THREE.MathUtils.lerp(startZ, endZ, scroll.offset);
-    state.camera.position.x = 0;
-    state.camera.position.y = 0;
-    state.camera.lookAt(0, 0, 0);
-  });
-
-  return null;
-}
-
-function PhotorealisticEarth() {
-  const groupRef = useRef(null);
+// 3. INTERACTIVE EARTH + CLOUDS
+function Earth() {
+  const groupRef = useRef();
   
-  // NOTE: Place these textures in your public/textures/ directory
-  const [colorMap, normalMap, specularMap, cloudsMap] = useTexture([
+  // Interactive Hover State
+  const [hovered, setHovered] = useState(false);
+  
+  // Textures - Names MUST match files in public/textures/
+  const [color, normal, specular, clouds] = useTexture([
     '/textures/earth_day.jpg',
     '/textures/earth_normal.jpg',
     '/textures/earth_specular.jpg',
     '/textures/earth_clouds.jpg'
   ]);
 
-  useFrame((state, delta) => {
-    if (groupRef.current) {
-      // Continuously rotate the Earth and Clouds together slowly
-      groupRef.current.rotation.y += delta * 0.05;
+  useFrame((_, delta) => {
+    // Smoothly scale the earth based on hover state
+    const targetScale = hovered ? 1.1 : 1;
+    groupRef.current.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), delta * 5);
+    
+    // Constant rotation
+    groupRef.current.rotation.y += delta * 0.05;
+  });
+
+  return (
+    <Float speed={2} rotationIntensity={0.5} floatIntensity={0.5}>
+      <group 
+        ref={groupRef}
+        onPointerOver={(e) => {
+          e.stopPropagation(); // Prevent event bubbling
+          setHovered(true);
+          document.body.style.cursor = 'pointer';
+        }}
+        onPointerOut={(e) => {
+          setHovered(false);
+          document.body.style.cursor = 'auto';
+        }}
+      >
+        <mesh>
+          <sphereGeometry args={[2, 64, 64]} />
+          <meshStandardMaterial map={color} normalMap={normal} roughnessMap={specular} roughness={0.6} metalness={0.2} />
+        </mesh>
+        <mesh>
+          <sphereGeometry args={[2.02, 64, 64]} />
+          <meshStandardMaterial map={clouds} transparent opacity={0.4} depthWrite={false} blending={THREE.AdditiveBlending} />
+        </mesh>
+      </group>
+    </Float>
+  );
+}
+
+// 4. CRASH-FREE SPACE DUST
+function SafeSpaceDust() {
+  const particlesCount = 2000;
+  const positions = useMemo(() => {
+    const pos = new Float32Array(particlesCount * 3);
+    for (let i = 0; i < particlesCount * 3; i++) pos[i] = (Math.random() - 0.5) * 50;
+    return pos;
+  }, []);
+
+  const dustRef = useRef();
+  const scroll = useScroll();
+
+  useFrame((_, delta) => {
+    if (dustRef.current) {
+      dustRef.current.position.z += delta * (1 + scroll.offset * 10);
+      if (dustRef.current.position.z > 20) dustRef.current.position.z = -20;
     }
   });
 
   return (
-    <group ref={groupRef} position={[0, 0, 0]}>
-      {/* Main Earth Sphere */}
-      <mesh>
-        <sphereGeometry args={[2, 64, 64]} />
-        <meshStandardMaterial 
-          map={colorMap}
-          normalMap={normalMap}
-          roughnessMap={specularMap} 
-          roughness={0.8}
-          metalness={0.1}
-        />
-      </mesh>
-
-      {/* Cloud Layer */}
-      <mesh>
-        <sphereGeometry args={[2.02, 64, 64]} />
-        <meshStandardMaterial 
-          map={cloudsMap}
-          transparent={true}
-          opacity={0.4}
-          depthWrite={false}
-          blending={THREE.AdditiveBlending}
-        />
-      </mesh>
-    </group>
+    <points ref={dustRef}>
+      <bufferGeometry>
+        <bufferAttribute attach="attributes-position" count={particlesCount} array={positions} itemSize={3} />
+      </bufferGeometry>
+      <pointsMaterial size={0.05} color="#ffffff" transparent opacity={0.8} />
+    </points>
   );
 }
 
 export default function Scene() {
   return (
     <>
-      <Stars radius={150} depth={50} count={10000} factor={6} saturation={0} fade speed={1} />
-      
-      {/* BRIGHTENED LIGHTING */}
       <ambientLight intensity={1.5} />
-      <directionalLight 
-        position={[5, 3, 5]} 
-        intensity={2.5} 
-        color="#ffffff" 
-      />
-
-      {/* 360 SKYBOX GALAXY */}
-      <Suspense fallback={null}>
-        <GalaxyBackground />
-      </Suspense>
-
+      <directionalLight position={[5, 3, 5]} intensity={2.5} color="#ffffff" />
+      
       <ScrollControls pages={3} damping={0.25}>
         <CameraRig />
         <Suspense fallback={null}>
-          <PhotorealisticEarth />
+          <GalaxyBackground />
+          <Earth />
+          <SafeSpaceDust />
         </Suspense>
       </ScrollControls>
+
+      {/* OrbitControls added for mouse interaction */}
+      <OrbitControls enableZoom={false} enablePan={false} enableRotate={true} />
     </>
   );
 }
