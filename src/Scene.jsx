@@ -1,15 +1,29 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, Suspense } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
-import { OrbitControls, Float, Stars } from '@react-three/drei';
+import { OrbitControls, Float, Stars, PerformanceMonitor, Html } from '@react-three/drei';
 import * as THREE from 'three';
+
+// 1. Mobile Detection helper (Reduces load by 50% on small screens)
+const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+
+// 2. Simple Loading Component for Suspense
+function LoadingScreen() {
+  return (
+    <Html center>
+      <div className="text-[#00ffa6] text-sm md:text-base tracking-[0.2em] uppercase font-bold whitespace-nowrap bg-black/50 p-4 rounded-xl backdrop-blur-md">
+        Loading Space...
+      </div>
+    </Html>
+  );
+}
 
 function InteractiveEarth() {
   const groupRef = useRef();
-  const { size } = useThree();
-  const isMobile = size.width < 768;
-  const earthScale = isMobile ? 0.8 : 1;
   
-  // ROBUST LOADING STATE
+  const earthScale = isMobile ? 0.8 : 1;
+  const segments = isMobile ? 32 : 64; // Optimized geometry for mobile
+  
+  // 3. Crash-Proof Texture Loading Mechanism
   const [textures, setTextures] = useState(null);
 
   useEffect(() => {
@@ -36,7 +50,7 @@ function InteractiveEarth() {
         undefined,
         (error) => {
           console.warn(`[SafeLoader] 404 Missing Texture: ${urls[key]}. Using fallback.`);
-          result[key] = null; // Set to null so the app doesn't crash
+          result[key] = null; // Do NOT throw an error, gracefully fallback
           loadedCount++;
           if (loadedCount === keys.length) setTextures(result);
         }
@@ -58,43 +72,34 @@ function InteractiveEarth() {
     groupRef.current.rotation.z = THREE.MathUtils.lerp(groupRef.current.rotation.z, -targetX, 0.05);
   });
 
-  // FALLBACK RENDER: While loading or if textures completely fail
-  if (!textures) {
-    return (
-      <Float speed={2} rotationIntensity={0.5} floatIntensity={1}>
-        <group scale={earthScale}>
-          <mesh>
-            <sphereGeometry args={[2, 64, 64]} />
-            <meshStandardMaterial color="#111111" roughness={0.9} />
-          </mesh>
-        </group>
-      </Float>
-    );
-  }
+  // Keep rendering null until textures finish attempting to load.
+  // The Suspense wrapper will show the <LoadingScreen /> while we wait.
+  if (!textures) return null;
 
   return (
     <Float speed={2} rotationIntensity={0.5} floatIntensity={1}>
       <group ref={groupRef} scale={earthScale}>
+        
         {/* Core Night Earth Mesh */}
         <mesh>
-          <sphereGeometry args={[2, 64, 64]} />
+          <sphereGeometry args={[2, segments, segments]} />
           <meshStandardMaterial 
             map={textures.map || undefined} 
             normalMap={textures.normalMap || undefined} 
             roughnessMap={textures.roughnessMap || undefined} 
             emissive={new THREE.Color("#ffffff")}
-            emissiveMap={textures.map || undefined} // Use map as emissive map for city lights
+            emissiveMap={textures.map || undefined}
             emissiveIntensity={textures.map ? 0.5 : 0} 
-            color={!textures.map ? "#111111" : "#ffffff"} // Fallback color if map is missing
+            color={!textures.map ? "#111111" : "#ffffff"} // Simple fallback color
             roughness={0.7} 
             metalness={0.1} 
           />
         </mesh>
 
-        {/* Floating Clouds Layer - Only render if clouds texture exists */}
+        {/* Floating Clouds Layer - Only load if texture succeeded */}
         {textures.cloudsMap && (
           <mesh>
-            <sphereGeometry args={[2.02, 64, 64]} />
+            <sphereGeometry args={[2.02, segments, segments]} />
             <meshStandardMaterial 
               map={textures.cloudsMap} 
               transparent={true} 
@@ -109,17 +114,47 @@ function InteractiveEarth() {
   );
 }
 
+// Adaptive Performance Component
+function AdaptivePerformance() {
+  const { gl } = useThree();
+  return (
+    <PerformanceMonitor 
+      onDecline={() => gl.setPixelRatio(1)} // Downgrade rendering quality if device lags
+      onIncline={() => gl.setPixelRatio(1.5)} // Restore quality if device is fast
+    />
+  );
+}
+
 export default function Scene() {
   return (
     <>
+      {/* 4. Performance Optimization */}
+      <AdaptivePerformance />
+
       <ambientLight intensity={0.2} />
       <directionalLight position={[5, 3, 5]} intensity={1.5} color="#ffffff" />
 
-      <Stars radius={100} depth={50} count={7000} factor={4} saturation={0} fade speed={1} />
-      
-      <OrbitControls enableZoom={false} enablePan={false} enableRotate={true} />
-      
-      <InteractiveEarth />
+      {/* 5. Loading State & Premium Controls */}
+      <Suspense fallback={<LoadingScreen />}>
+        <Stars 
+          radius={100} 
+          depth={50} 
+          count={isMobile ? 3000 : 7000} // Less stars for mobile 
+          factor={4} 
+          saturation={0} 
+          fade 
+          speed={1} 
+        />
+        
+        <OrbitControls 
+          makeDefault 
+          enableZoom={false} 
+          enablePan={false} 
+          enableRotate={true} 
+        />
+        
+        <InteractiveEarth />
+      </Suspense>
     </>
   );
 }
