@@ -125,11 +125,13 @@ export default function App() {
   if (!isMounted) return null;
 
   return (
-    // REMOVED REACT-LENIS ENTIRELY
     <div className="relative w-full bg-transparent text-white overflow-hidden selection:bg-[#00ffa6] selection:text-black">
       
-      {/* Isolated Canvas Background - fixed behind normal DOM */}
-      <div className="fixed inset-0 w-full h-full -z-10 pointer-events-none bg-black">
+      {/* 1. FIXED CANVAS WRAPPER: Exact styling requested for ScrollControls */}
+      <div 
+        className="fixed inset-0 -z-10 bg-black" 
+        style={{ width: '100vw', height: '100vh', overflow: 'hidden' }}
+      >
         <Suspense fallback={<div className="w-full h-full flex items-center justify-center text-[#00ffa6]">Initializing Core...</div>}>
           <Canvas 
             className="w-full h-full block"
@@ -143,6 +145,7 @@ export default function App() {
       </div>
 
       {/* DOM Flow Content */}
+      {/* pointer-events-none added to sections so they don't block the ScrollControls canvas wrapper */}
       <section className="relative w-full min-h-screen flex flex-col justify-between p-6 md:p-10 pointer-events-none">
         <header className="flex justify-between items-center pointer-events-auto">
           <span className="font-bold tracking-widest text-sm uppercase">Shadow DevX</span>

@@ -37697,6 +37697,62 @@ function create(createState2) {
   };
   return useStore2;
 }
+const isPromise = (promise) => typeof promise === "object" && typeof promise.then === "function";
+const globalCache = [];
+function shallowEqualArrays(arrA, arrB, equal = (a, b3) => a === b3) {
+  if (arrA === arrB) return true;
+  if (!arrA || !arrB) return false;
+  const len = arrA.length;
+  if (arrB.length !== len) return false;
+  for (let i2 = 0; i2 < len; i2++) if (!equal(arrA[i2], arrB[i2])) return false;
+  return true;
+}
+function query(fn, keys = null, preload3 = false, config = {}) {
+  if (keys === null) keys = [fn];
+  for (const entry2 of globalCache) {
+    if (shallowEqualArrays(keys, entry2.keys, entry2.equal)) {
+      if (preload3) return void 0;
+      if (Object.prototype.hasOwnProperty.call(entry2, "error")) throw entry2.error;
+      if (Object.prototype.hasOwnProperty.call(entry2, "response")) {
+        if (config.lifespan && config.lifespan > 0) {
+          if (entry2.timeout) clearTimeout(entry2.timeout);
+          entry2.timeout = setTimeout(entry2.remove, config.lifespan);
+        }
+        return entry2.response;
+      }
+      if (!preload3) throw entry2.promise;
+    }
+  }
+  const entry = {
+    keys,
+    equal: config.equal,
+    remove: () => {
+      const index = globalCache.indexOf(entry);
+      if (index !== -1) globalCache.splice(index, 1);
+    },
+    promise: (
+      // Execute the promise
+      (isPromise(fn) ? fn : fn(...keys)).then((response) => {
+        entry.response = response;
+        if (config.lifespan && config.lifespan > 0) {
+          entry.timeout = setTimeout(entry.remove, config.lifespan);
+        }
+      }).catch((error2) => entry.error = error2)
+    )
+  };
+  globalCache.push(entry);
+  if (!preload3) throw entry.promise;
+  return void 0;
+}
+const suspend = (fn, keys, config) => query(fn, keys, false, config);
+const preload2 = (fn, keys, config) => void query(fn, keys, true, config);
+const clear = (keys) => {
+  if (keys === void 0 || keys.length === 0) globalCache.splice(0, globalCache.length);
+  else {
+    const entry = globalCache.find((entry2) => shallowEqualArrays(keys, entry2.keys, entry2.equal));
+    if (entry) entry.remove();
+  }
+};
 var reactReconciler = { exports: {} };
 var scheduler = { exports: {} };
 var scheduler_production_min = {};
@@ -43067,6 +43123,19 @@ const is = {
     return true;
   }
 };
+function buildGraph(object) {
+  const data = {
+    nodes: {},
+    materials: {}
+  };
+  if (object) {
+    object.traverse((obj) => {
+      if (obj.name) data.nodes[obj.name] = obj;
+      if (obj.material && !data.materials[obj.material.name]) data.materials[obj.material.name] = obj.material;
+    });
+  }
+  return data;
+}
 function dispose(obj) {
   if (obj.dispose && obj.type !== "Scene") obj.dispose();
   for (const p2 in obj) {
@@ -43929,6 +43998,9 @@ function useStore() {
   if (!store) throw new Error("R3F: Hooks can only be used within the Canvas component!");
   return store;
 }
+function useThree(selector = (state) => state, equalityFn) {
+  return useStore()(selector, equalityFn);
+}
 function useFrame(callback, renderPriority = 0) {
   const store = useStore();
   const subscribe = store.getState().internal.subscribe;
@@ -43936,6 +44008,36 @@ function useFrame(callback, renderPriority = 0) {
   useIsomorphicLayoutEffect$1(() => subscribe(ref, renderPriority, store), [renderPriority, subscribe, store]);
   return null;
 }
+const memoizedLoaders = /* @__PURE__ */ new WeakMap();
+function loadingFn(extensions, onProgress) {
+  return function(Proto, ...input) {
+    let loader = memoizedLoaders.get(Proto);
+    if (!loader) {
+      loader = new Proto();
+      memoizedLoaders.set(Proto, loader);
+    }
+    if (extensions) extensions(loader);
+    return Promise.all(input.map((input2) => new Promise((res, reject) => loader.load(input2, (data) => {
+      if (data.scene) Object.assign(data, buildGraph(data.scene));
+      res(data);
+    }, onProgress, (error2) => reject(new Error(`Could not load ${input2}: ${error2 == null ? void 0 : error2.message}`))))));
+  };
+}
+function useLoader(Proto, input, extensions, onProgress) {
+  const keys = Array.isArray(input) ? input : [input];
+  const results = suspend(loadingFn(extensions, onProgress), [Proto, ...keys], {
+    equal: is.equ
+  });
+  return Array.isArray(input) ? results : results[0];
+}
+useLoader.preload = function(Proto, input, extensions) {
+  const keys = Array.isArray(input) ? input : [input];
+  return preload2(loadingFn(extensions), [Proto, ...keys]);
+};
+useLoader.clear = function(Proto, input) {
+  const keys = Array.isArray(input) ? input : [input];
+  return clear([Proto, ...keys]);
+};
 const roots = /* @__PURE__ */ new Map();
 const {
   invalidate,
@@ -52546,7 +52648,7 @@ const createMotionComponent = /* @__PURE__ */ createMotionComponentFactory({
   ...layout
 }, createDomVisualElement);
 const motion = /* @__PURE__ */ createDOMMotionComponentProxy(createMotionComponent);
-const Scene2 = React.lazy(() => __vitePreload(() => import("./Scene-CBXVAgpC.js"), true ? [] : void 0));
+const Scene2 = React.lazy(() => __vitePreload(() => import("./Scene-9Wol2Jg2.js"), true ? [] : void 0));
 function MagneticButton({ children, className, ...props }) {
   const ref = reactExports.useRef(null);
   const [position, setPosition] = reactExports.useState({ x: 0, y: 0 });
@@ -52719,13 +52821,21 @@ client.createRoot(document.getElementById("root")).render(
 export {
   AdditiveBlending as A,
   Color as C,
-  MathUtils as M,
-  PlaneGeometry as P,
+  Euler as E,
+  Matrix4 as M,
+  Quaternion as Q,
   REVISION as R,
   Spherical as S,
-  Vector3 as V,
-  ShaderMaterial as a,
+  TextureLoader as T,
+  Vector2 as V,
+  Vector3 as a,
+  Vector4 as b,
+  useFrame as c,
+  useLoader as d,
+  Texture as e,
+  ShaderMaterial as f,
+  MathUtils as g,
   jsxRuntimeExports as j,
   reactExports as r,
-  useFrame as u
+  useThree as u
 };
