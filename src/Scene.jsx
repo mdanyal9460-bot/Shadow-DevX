@@ -3,10 +3,9 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls, Float, Stars, PerformanceMonitor, Html } from '@react-three/drei';
 import * as THREE from 'three';
 
-// 1. Mobile Detection helper (Reduces load by 50% on small screens)
+// Mobile detection for scale optimizations
 const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
 
-// 2. Simple Loading Component for Suspense
 function LoadingScreen() {
   return (
     <Html center>
@@ -20,10 +19,11 @@ function LoadingScreen() {
 function InteractiveEarth() {
   const groupRef = useRef();
   
-  const earthScale = isMobile ? 0.8 : 1;
-  const segments = isMobile ? 32 : 64; // Optimized geometry for mobile
+  // Mobile scale dynamically dropped to 0.75 for perfect fit
+  const earthScale = isMobile ? 0.75 : 1;
+  // Asteroid Bug Fix: Forcing a high-res perfect sphere (64x64) on all devices
+  const segments = 64; 
   
-  // 3. Crash-Proof Texture Loading Mechanism
   const [textures, setTextures] = useState(null);
 
   useEffect(() => {
@@ -50,7 +50,7 @@ function InteractiveEarth() {
         undefined,
         (error) => {
           console.warn(`[SafeLoader] 404 Missing Texture: ${urls[key]}. Using fallback.`);
-          result[key] = null; // Do NOT throw an error, gracefully fallback
+          result[key] = null; 
           loadedCount++;
           if (loadedCount === keys.length) setTextures(result);
         }
@@ -61,10 +61,8 @@ function InteractiveEarth() {
   useFrame((state, delta) => {
     if (!groupRef.current) return;
 
-    // Organic constant rotation
     groupRef.current.rotation.y += delta * 0.05;
 
-    // Mouse Pointer Tilt Interaction
     const targetX = state.pointer.x * 0.3;
     const targetY = state.pointer.y * 0.3;
 
@@ -72,15 +70,12 @@ function InteractiveEarth() {
     groupRef.current.rotation.z = THREE.MathUtils.lerp(groupRef.current.rotation.z, -targetX, 0.05);
   });
 
-  // Keep rendering null until textures finish attempting to load.
-  // The Suspense wrapper will show the <LoadingScreen /> while we wait.
   if (!textures) return null;
 
   return (
     <Float speed={2} rotationIntensity={0.5} floatIntensity={1}>
       <group ref={groupRef} scale={earthScale}>
         
-        {/* Core Night Earth Mesh */}
         <mesh>
           <sphereGeometry args={[2, segments, segments]} />
           <meshStandardMaterial 
@@ -90,13 +85,13 @@ function InteractiveEarth() {
             emissive={new THREE.Color("#ffffff")}
             emissiveMap={textures.map || undefined}
             emissiveIntensity={textures.map ? 0.5 : 0} 
-            color={!textures.map ? "#111111" : "#ffffff"} // Simple fallback color
-            roughness={0.7} 
-            metalness={0.1} 
+            color={!textures.map ? "#111111" : "#ffffff"} 
+            // Material properties adjusted to prevent rugged artifacts (Asteroid Bug Fix)
+            roughness={0.6} 
+            metalness={0.15} 
           />
         </mesh>
 
-        {/* Floating Clouds Layer - Only load if texture succeeded */}
         {textures.cloudsMap && (
           <mesh>
             <sphereGeometry args={[2.02, segments, segments]} />
@@ -114,13 +109,12 @@ function InteractiveEarth() {
   );
 }
 
-// Adaptive Performance Component
 function AdaptivePerformance() {
   const { gl } = useThree();
   return (
     <PerformanceMonitor 
-      onDecline={() => gl.setPixelRatio(1)} // Downgrade rendering quality if device lags
-      onIncline={() => gl.setPixelRatio(1.5)} // Restore quality if device is fast
+      onDecline={() => gl.setPixelRatio(1)} 
+      onIncline={() => gl.setPixelRatio(1.5)} 
     />
   );
 }
@@ -128,31 +122,26 @@ function AdaptivePerformance() {
 export default function Scene() {
   return (
     <>
-      {/* 4. Performance Optimization */}
       <AdaptivePerformance />
-
       <ambientLight intensity={0.2} />
       <directionalLight position={[5, 3, 5]} intensity={1.5} color="#ffffff" />
 
-      {/* 5. Loading State & Premium Controls */}
       <Suspense fallback={<LoadingScreen />}>
         <Stars 
           radius={100} 
           depth={50} 
-          count={isMobile ? 3000 : 7000} // Less stars for mobile 
+          count={isMobile ? 3000 : 7000} 
           factor={4} 
           saturation={0} 
           fade 
           speed={1} 
         />
-        
         <OrbitControls 
           makeDefault 
           enableZoom={false} 
           enablePan={false} 
           enableRotate={true} 
         />
-        
         <InteractiveEarth />
       </Suspense>
     </>
