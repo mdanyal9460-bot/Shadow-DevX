@@ -16,6 +16,31 @@ function LoadingScreen() {
   );
 }
 
+function SpaceDust() {
+  const starsRef = useRef();
+
+  useEffect(() => {
+    if (starsRef.current) {
+      starsRef.current.material.transparent = true;
+      starsRef.current.material.opacity = 0.08;
+      starsRef.current.material.depthWrite = false;
+    }
+  }, []);
+
+  return (
+    <Stars 
+      ref={starsRef}
+      radius={100} 
+      depth={50} 
+      count={isMobile ? 2100 : 4900} 
+      factor={2} 
+      saturation={0} 
+      fade 
+      speed={0.5} 
+    />
+  );
+}
+
 function InteractiveEarth() {
   const groupRef = useRef();
   
@@ -126,16 +151,8 @@ export default function Scene() {
       <directionalLight position={[5, 3, 5]} intensity={1.5} color="#ffffff" />
 
       <Suspense fallback={<LoadingScreen />}>
-        <Stars 
-          radius={100} 
-          depth={50} 
-          count={isMobile ? 3000 : 7000} 
-          factor={4} 
-          saturation={0} 
-          fade 
-          speed={1} 
-        />
-        <OrbitControls 
+        <SpaceDust />
+        <OrbitControls  
           makeDefault 
           enableZoom={false} 
           enablePan={false} 
