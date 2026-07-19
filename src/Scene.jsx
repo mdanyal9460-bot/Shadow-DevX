@@ -21,8 +21,8 @@ function InteractiveEarth() {
   
   // Mobile scale dynamically dropped to 0.75 for perfect fit
   const earthScale = isMobile ? 0.75 : 1;
-  // Asteroid Bug Fix: Forcing a high-res perfect sphere (64x64) on all devices
-  const segments = 64; 
+  // Mobile touch & performance optimization: dynamically downgrade geometry to 32
+  const segments = isMobile ? 32 : 64; 
   
   const [textures, setTextures] = useState(null);
 
@@ -86,7 +86,6 @@ function InteractiveEarth() {
             emissiveMap={textures.map || undefined}
             emissiveIntensity={textures.map ? 0.5 : 0} 
             color={!textures.map ? "#111111" : "#ffffff"} 
-            // Material properties adjusted to prevent rugged artifacts (Asteroid Bug Fix)
             roughness={0.6} 
             metalness={0.15} 
           />

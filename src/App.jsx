@@ -1,8 +1,95 @@
-import React, { useState, useEffect, Suspense } from 'react';
-import { Canvas } from '@react-three/fiber';
+import React, { useState, useEffect, Suspense, useRef } from 'react';
+import { Canvas, useFrame } from '@react-three/fiber';
+import { Float } from '@react-three/drei';
 import { motion } from 'framer-motion';
+import * as THREE from 'three';
 
 const Scene = React.lazy(() => import('./Scene'));
+
+function MyStory() {
+  return (
+    <section className="relative w-full py-24 flex flex-col justify-center items-center p-6 md:p-16 z-10 pointer-events-none">
+      <div className="w-full max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+        
+        {/* Left: Developer Avatar */}
+        <motion.div 
+          initial={{ x: -50, opacity: 0 }}
+          whileInView={{ x: 0, opacity: 1 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.8, ease: "easeOut" }}
+          className="flex justify-center md:justify-end pointer-events-auto"
+        >
+          <div className="bg-white/5 backdrop-blur-xl border border-white/10 p-8 rounded-3xl shadow-[0_4px_30px_rgba(0,0,0,0.1)] relative">
+            <div className="w-48 h-48 rounded-full bg-slate-800 animate-pulse border-4 border-[#00ffa6] flex items-center justify-center relative overflow-hidden shadow-[0_0_30px_rgba(0,255,166,0.2)]">
+              {/* Neon abstract tech icon placeholder */}
+              <svg className="w-20 h-20 text-[#00ffa6] opacity-80" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
+              </svg>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Right: Narrative */}
+        <motion.div 
+          initial={{ x: 50, opacity: 0 }}
+          whileInView={{ x: 0, opacity: 1 }}
+          viewport={{ once: true, margin: "-100px" }}
+          transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
+          className="flex flex-col space-y-6 text-center md:text-left pointer-events-auto"
+        >
+          <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tighter drop-shadow-[0_0_15px_rgba(0,255,166,0.3)]">
+            The <span className="text-[#00ffa6]">Architect.</span>
+          </h2>
+          <p className="text-white/70 text-lg leading-relaxed font-light">
+            I am the driving force behind <span className="text-white font-bold">ShadowDev_X</span>. Balancing rigorous academic studies in the 10th class with an unwavering obsession for front-end engineering, I am proving that age is no barrier to building premium, high-performance digital experiences.
+          </p>
+          <p className="text-white/70 text-lg leading-relaxed font-light">
+            My focus bridges the gap between immersive 3D WebGL environments and fluid, conversion-optimized user interfaces. I engineer platforms that don't just look cinematic—they execute flawlessly.
+          </p>
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+
+// Sub-Component for Zaikai 3D Background Overlay
+function ZaikaiGeometricCore() {
+  const meshRef = useRef();
+  
+  useFrame((state, delta) => {
+    if (meshRef.current) {
+      meshRef.current.rotation.x += delta * 0.5;
+      meshRef.current.rotation.y += delta * 0.3;
+    }
+  });
+
+  return (
+    <Float speed={2} rotationIntensity={1.5} floatIntensity={2}>
+      <mesh ref={meshRef}>
+        <torusGeometry args={[1.5, 0.4, 16, 50]} />
+        <meshStandardMaterial 
+          color="#ff4500" 
+          emissive="#ff6347" 
+          emissiveIntensity={0.8}
+          roughness={0.2}
+          metalness={0.8}
+        />
+      </mesh>
+    </Float>
+  );
+}
+
+function ZaikaiCanvas() {
+  return (
+    <div className="absolute inset-0 z-0 opacity-50 pointer-events-none overflow-hidden rounded-2xl group-hover:opacity-80 transition-opacity duration-500">
+      <Canvas camera={{ position: [0, 0, 5], fov: 45 }}>
+        <ambientLight intensity={0.5} />
+        <pointLight position={[5, 5, 5]} intensity={2} color="#ff8c00" />
+        <ZaikaiGeometricCore />
+      </Canvas>
+    </div>
+  );
+}
 
 function ProjectsSection() {
   const projects = [
@@ -12,9 +99,10 @@ function ProjectsSection() {
       link: "https://shadowdev-portfolio.vercel.app/" 
     },
     { 
-      title: "Neon Cyberpunk UI", 
-      desc: "Interactive WebGL experience featuring dark mode and GSAP animations.",
-      link: "#" 
+      title: "Zaikai Sargodha", 
+      desc: "Premium home food catering UI combining sleek navigation architectures with warm, appetizing aesthetics.",
+      link: "#",
+      hasCustomBg: true
     },
     { 
       title: "E-Commerce WebGL", 
@@ -24,7 +112,7 @@ function ProjectsSection() {
   ];
 
   return (
-    <section className="relative w-full min-h-screen flex flex-col justify-center items-center p-6 md:p-16 z-10 pointer-events-none">
+    <section className="relative w-full py-24 flex flex-col justify-center items-center p-6 md:p-16 z-10 pointer-events-none">
       <motion.div 
         initial={{ opacity: 0, y: 50 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -36,7 +124,6 @@ function ProjectsSection() {
           Featured <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00ffa6] to-[#00b8ff]">Projects.</span>
         </h2>
         
-        {/* Responsive Grid: grid-cols-1 on mobile, grid-cols-3 on desktop */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
           {projects.map((proj, idx) => (
             <motion.div 
@@ -45,9 +132,12 @@ function ProjectsSection() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: idx * 0.2 }}
-              className="flex flex-col justify-between p-8 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl shadow-[0_4px_30px_rgba(0,0,0,0.1)] hover:border-[#00ffa6]/50 hover:bg-white/10 transition-all duration-300"
+              className="relative flex flex-col justify-between p-8 bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl shadow-[0_4px_30px_rgba(0,0,0,0.1)] hover:border-[#00ffa6]/50 hover:bg-white/10 transition-all duration-300 overflow-hidden group"
             >
-              <div>
+              {/* Special Custom 3D Background Injection for Zaikai */}
+              {proj.hasCustomBg && <ZaikaiCanvas />}
+
+              <div className="relative z-10">
                 <h3 className="text-2xl font-bold mb-4 uppercase tracking-wide text-white group-hover:text-[#00ffa6] transition-colors">{proj.title}</h3>
                 <p className="text-sm text-white/70 tracking-wide font-light leading-relaxed mb-8">{proj.desc}</p>
               </div>
@@ -55,7 +145,7 @@ function ProjectsSection() {
                 href={proj.link} 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="w-full text-center py-3 px-4 bg-transparent border border-white/30 rounded-full text-xs font-bold uppercase tracking-widest text-white hover:bg-[#00ffa6] hover:text-black hover:border-transparent transition-all duration-300"
+                className="relative z-10 w-full text-center py-3 px-4 bg-transparent border border-white/30 rounded-full text-xs font-bold uppercase tracking-widest text-white hover:bg-[#00ffa6] hover:text-black hover:border-transparent transition-all duration-300"
               >
                 View Project
               </a>
@@ -84,7 +174,6 @@ function ContactSection() {
           Ready to build something amazing? Let's discuss your next project over a quick chat.
         </p>
         
-        {/* Sleek WhatsApp Button */}
         <a 
           href="https://wa.me/923000253932" 
           target="_blank" 
@@ -108,9 +197,9 @@ export default function App() {
   if (!isMounted) return null;
 
   return (
-    <div className="relative w-full bg-black text-white selection:bg-[#00ffa6] selection:text-black font-sans">
+    <div className="relative w-full bg-black text-white selection:bg-[#00ffa6] selection:text-black font-sans overflow-x-hidden">
       
-      {/* 3D WebGL Background Layer - Fixed behind DOM, catches touch events */}
+      {/* 3D WebGL Background Layer */}
       <div className="fixed inset-0 z-0 touch-none pointer-events-auto">
         <Suspense fallback={
           <div className="w-full h-full flex items-center justify-center text-[#00ffa6] tracking-widest text-sm uppercase">
@@ -141,7 +230,7 @@ export default function App() {
           </div>
         </motion.header>
 
-        <main className="flex flex-col justify-center items-center text-center pointer-events-none mt-auto mb-auto">
+        <main className="flex flex-col justify-center items-center text-center mt-auto mb-auto">
           <motion.h1 
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -178,6 +267,9 @@ export default function App() {
           </button>
         </motion.footer>
       </section>
+
+      {/* Narrative Section */}
+      <MyStory />
 
       {/* Featured Projects Section */}
       <ProjectsSection />
