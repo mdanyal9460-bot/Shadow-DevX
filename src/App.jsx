@@ -108,6 +108,37 @@ function ProjectsSection() {
   );
 }
 
+function FiverrCTA() {
+  return (
+    <section className="relative w-full py-24 flex flex-col justify-center items-center p-6 md:p-16 z-10 pointer-events-none">
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.95 }}
+        whileInView={{ opacity: 1, scale: 1 }}
+        viewport={{ once: true, margin: "-50px" }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
+        className="w-full max-w-4xl bg-zinc-900/40 backdrop-blur-xl border border-white/10 p-8 md:p-12 rounded-3xl shadow-[0_10px_40px_rgba(0,0,0,0.5)] hover:border-transparent hover:bg-gradient-to-br hover:from-cyan-500/10 hover:to-[#1dbf73]/10 transition-all duration-500 pointer-events-auto flex flex-col items-center text-center group"
+      >
+        <h2 className="text-3xl md:text-5xl font-black uppercase tracking-tighter mb-4 text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.1)]">
+          Got an Idea? <span className="text-[#1dbf73] drop-shadow-[0_0_15px_rgba(29,191,115,0.4)]">Let's Build It Live.</span>
+        </h2>
+        <p className="text-white/70 text-lg leading-relaxed font-light font-sans mb-8 max-w-2xl">
+          Available for custom 3D web experiences, advanced React apps, and premium frontend engineering on Fiverr.
+        </p>
+        
+        <motion.a 
+          href="https://fiverr.com/s/8z1DWKV"
+          target="_blank"
+          rel="noopener noreferrer"
+          whileTap={{ scale: 0.95, rotate: [0, -1, 1, -1, 0] }}
+          className="inline-block px-10 py-5 bg-[#1dbf73] hover:bg-[#19a463] text-white font-bold uppercase tracking-widest rounded-full shadow-[0_0_20px_rgba(29,191,115,0.4)] hover:shadow-[0_0_30px_rgba(29,191,115,0.7)] hover:-translate-y-1 transition-all duration-300"
+        >
+          Hire Me on Fiverr
+        </motion.a>
+      </motion.div>
+    </section>
+  );
+}
+
 function ContactSection() {
   return (
     <section className="relative w-full pt-24 pb-32 flex flex-col justify-center items-center p-6 md:p-16 z-10 pointer-events-none bg-black/40 backdrop-blur-md border-t border-white/10">
@@ -224,6 +255,9 @@ export default function App() {
 
       {/* Featured Projects Section */}
       <ProjectsSection />
+
+      {/* Fiverr CTA Section */}
+      <FiverrCTA />
 
       {/* Connect With Me Section */}
       <ContactSection />
