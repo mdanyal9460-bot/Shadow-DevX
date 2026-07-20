@@ -178,11 +178,11 @@ export default function DimensionPortal({ isOpen = false }) {
     ctx.textBaseline = 'middle';
     
     // Line 1: Welcome (High-Tech font)
-    ctx.font = \`bold \${isMobile ? 22 : 50}px "Courier New", monospace\`;
+    ctx.font = `bold ${isMobile ? 22 : 50}px "Courier New", monospace`;
     ctx.fillText("WELCOME TO MY DIMENSION", canvas.width / 2, canvas.height / 2 - (isMobile ? 35 : 70));
     
     // Line 2: Atomic (Massive font)
-    ctx.font = \`bold \${isMobile ? 45 : 110}px "Arial Black", sans-serif\`;
+    ctx.font = `bold ${isMobile ? 45 : 110}px "Arial Black", sans-serif`;
     ctx.fillText("I AM ATOMIC", canvas.width / 2, canvas.height / 2 + (isMobile ? 25 : 60));
     
     const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
