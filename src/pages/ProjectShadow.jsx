@@ -1,7 +1,96 @@
-import React, { useEffect } from 'react';
-import { Canvas } from '@react-three/fiber';
-import { ScrollControls } from '@react-three/drei';
+import React, { useRef, useEffect } from 'react';
+import { Canvas, useFrame } from '@react-three/fiber';
+import { ScrollControls, useScroll, Float, Sparkles, MeshTransmissionMaterial, Icosahedron } from '@react-three/drei';
+import { EffectComposer, Bloom } from '@react-three/postprocessing';
+import * as THREE from 'three';
 import Lenis from '@studio-freight/lenis';
+
+function ShadowScene() {
+  const scroll = useScroll();
+  const coreRef = useRef();
+  const materialRef = useRef();
+
+  useFrame((state, delta) => {
+    if (!coreRef.current || !materialRef.current) return;
+    
+    // scroll.offset goes from 0.0 (top) to 1.0 (bottom)
+    const offset = scroll.offset;
+
+    // Define target states based on scroll section
+    let targetX = 0;
+    let targetScale = 1;
+    let targetRotZ = 0;
+    let targetColor = new THREE.Color("#050010");
+
+    if (offset < 0.3) {
+      // Transitioning out of Section 1 to Section 2
+      const progress = offset / 0.3;
+      targetX = THREE.MathUtils.lerp(0, 2, progress);
+      targetScale = THREE.MathUtils.lerp(1, 1.5, progress);
+      targetRotZ = THREE.MathUtils.lerp(0, Math.PI / 4, progress);
+      targetColor.lerpColors(new THREE.Color("#050010"), new THREE.Color("#2a0a4a"), progress);
+    } else if (offset >= 0.3 && offset < 0.7) {
+      // Transitioning from Section 2 to Section 3
+      const progress = (offset - 0.3) / 0.4;
+      targetX = THREE.MathUtils.lerp(2, -2.5, progress);
+      targetScale = THREE.MathUtils.lerp(1.5, 2.5, progress);
+      targetRotZ = THREE.MathUtils.lerp(Math.PI / 4, -Math.PI, progress);
+      targetColor.lerpColors(new THREE.Color("#2a0a4a"), new THREE.Color("#ff0000"), progress); // Dark/Neon red
+    } else {
+      // Locked at Section 3 (Alpha Protocol)
+      targetX = -2.5;
+      targetScale = 2.5;
+      targetRotZ = -Math.PI;
+      targetColor.set("#ff0000");
+    }
+
+    // Smoothly interpolate current values to target values
+    coreRef.current.position.x = THREE.MathUtils.lerp(coreRef.current.position.x, targetX, 10 * delta);
+    const currentScale = THREE.MathUtils.lerp(coreRef.current.scale.x, targetScale, 10 * delta);
+    coreRef.current.scale.setScalar(currentScale);
+    coreRef.current.rotation.z = THREE.MathUtils.lerp(coreRef.current.rotation.z, targetRotZ, 10 * delta);
+    
+    // Continuous aggressive spin layered on top
+    coreRef.current.rotation.x += delta * (0.5 + offset * 3.0);
+    coreRef.current.rotation.y += delta * (0.3 + offset * 4.0);
+    
+    // Smoothly interpolate color
+    materialRef.current.color.lerp(targetColor, 10 * delta);
+  });
+
+  return (
+    <>
+      <ambientLight intensity={0.2} />
+      <directionalLight position={[5, 5, 5]} intensity={2} color="#6a0dad" />
+      
+      {/* Dark Particles Vibe */}
+      <Sparkles count={800} scale={15} color="#9b5de5" size={2} speed={0.4} opacity={0.5} />
+      
+      {/* Central Atomic Core */}
+      <Float speed={2} rotationIntensity={1.5} floatIntensity={2}>
+        <Icosahedron ref={coreRef} args={[1, 0]} position={[0, 0, 0]}>
+          <MeshTransmissionMaterial 
+            ref={materialRef}
+            backside
+            samples={4}
+            thickness={0.5}
+            chromaticAberration={1}
+            anisotropy={0.3}
+            distortion={0.8}
+            distortionScale={0.5}
+            temporalDistortion={0.2}
+            color="#050010"
+          />
+        </Icosahedron>
+      </Float>
+      
+      {/* Cinematic Post Processing */}
+      <EffectComposer disableNormalPass>
+        <Bloom mipmapBlur luminanceThreshold={0.1} intensity={1.5} />
+      </EffectComposer>
+    </>
+  );
+}
 
 export default function ProjectShadow() {
   useEffect(() => {
@@ -82,7 +171,7 @@ export default function ProjectShadow() {
         >
           <color attach="background" args={['#050010']} />
           <ScrollControls pages={3} damping={0.1}>
-            {/* Future 3D elements will go here and respond to scroll via useScroll() */}
+            <ShadowScene />
           </ScrollControls>
         </Canvas>
       </div>
