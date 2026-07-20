@@ -9,6 +9,7 @@ const vertexShader = `
 uniform float uTime;
 uniform float uProgress;
 uniform vec2 uMouse;
+uniform float uPointerSpeed;
 
 attribute vec3 aPosOrb;
 attribute vec3 aPosVortex;
@@ -51,19 +52,32 @@ void main() {
         float radius = length(aPosVortex.xz);
         vec3 swirlingVortex = vec3(cos(angle) * radius, aPosVortex.y, sin(angle) * radius);
         
-        // Text Position
+        // Text Position with Living Current (Fluid flow drift)
         vec3 textPos = aPosText;
+        textPos.x += sin(uTime * 1.5 + textPos.y * 0.5) * 0.2;
+        textPos.y += cos(uTime * 1.5 + textPos.x * 0.5) * 0.2;
         
-        // Mouse Repulsion Logic (The "Stackside" interaction)
+        // Mouse Repulsion Logic & Fracture
         float dist = distance(textPos.xy, uMouse);
+        
+        // 1. Slow Speed: Standard Ripple
         if (dist < 3.0) {
             vec2 dir = normalize(textPos.xy - uMouse);
-            // push particles away and slightly forward
             textPos.xy += dir * (3.0 - dist) * 0.5;
             textPos.z += (3.0 - dist) * 0.5;
         }
         
-        // Add subtle continuous breathing to the text
+        // 2. High Speed: Chaotic Fracture
+        float fractureEffect = smoothstep(30.0, 100.0, uPointerSpeed);
+        if (fractureEffect > 0.0 && dist < 8.0) {
+            // Generate pseudo-random hash for each particle based on its position
+            float hash = fract(sin(dot(aPosText.xyz, vec3(12.9898, 78.233, 45.164))) * 43758.5453);
+            vec3 chaosDir = normalize(vec3(hash - 0.5, fract(hash * 2.0) - 0.5, fract(hash * 3.0) - 0.5));
+            // Blast outward proportionally to speed and inversely to distance
+            textPos += chaosDir * fractureEffect * (8.0 - dist) * 1.5;
+        }
+        
+        // Add subtle continuous breathing to the text Z-axis
         textPos.z += sin(uTime * 2.0 + textPos.x * 0.5) * 0.2;
         
         pos = mix(swirlingVortex, textPos, p2);
@@ -83,18 +97,43 @@ void main() {
 const fragmentShader = `
 varying vec3 vColor;
 void main() {
-    // Create a soft glowing circle instead of a square
-    float d = distance(gl_PointCoord, vec2(0.5));
-    if(d > 0.5) discard;
-    float alpha = smoothstep(0.5, 0.1, d);
-    gl_FragColor = vec4(vColor, alpha * 0.9);
+    // Crystal Prism Splatting & Refraction Math
+    vec2 uv = gl_PointCoord - 0.5;
+    float radius = length(uv);
+    float angle = atan(uv.y, uv.x);
+    
+    // Add angular sharp cuts to create fractured star/crystal shapes
+    float cuts = sin(angle * 6.0) * 0.1 + cos(angle * 3.0) * 0.1;
+    if (radius > 0.4 + cuts) discard;
+    
+    // Refraction Highlights (Bright white edges)
+    float innerGlow = smoothstep(0.4 + cuts, 0.0, radius);
+    float edgeHighlight = smoothstep(0.3 + cuts, 0.4 + cuts, radius);
+    
+    // Mix base color with crystalline edge light
+    vec3 crystalColor = mix(vColor, vec3(1.0), edgeHighlight * 0.8);
+    gl_FragColor = vec4(crystalColor, innerGlow * 0.9);
 }
 `;
 
 export default function DimensionPortal({ isOpen = false }) {
   const shaderRef = useRef();
   const targetProgress = useRef(0);
+  const prevMouse = useRef(new THREE.Vector2());
   const { viewport } = useThree();
+
+  // Background Quantum Lattice Mesh (z: -50)
+  const latticePoints = useMemo(() => {
+    const points = [];
+    for (let i = 0; i < 2000; i++) {
+      points.push(
+        (Math.random() - 0.5) * 100, // X
+        (Math.random() - 0.5) * 100, // Y
+        -50 + (Math.random() - 0.5) * 20 // Z depth variation
+      );
+    }
+    return new Float32Array(points);
+  }, []);
 
   const [aPosOrb, aPosVortex, aPosText, aColor] = useMemo(() => {
     const orb = new Float32Array(NUM_PARTICLES * 3);
@@ -175,7 +214,8 @@ export default function DimensionPortal({ isOpen = false }) {
   const uniforms = useMemo(() => ({
     uTime: { value: 0 },
     uProgress: { value: 0 },
-    uMouse: { value: new THREE.Vector2(0, 0) }
+    uMouse: { value: new THREE.Vector2(0, 0) },
+    uPointerSpeed: { value: 0 }
   }), []);
 
   useEffect(() => {
@@ -197,19 +237,38 @@ export default function DimensionPortal({ isOpen = false }) {
       delta * 0.8 // Morph speed
     );
     
-    // Mouse Interaction
-    // Convert normalized device coordinates (state.pointer) to approximate world units
-    mat.uniforms.uMouse.value.lerp(
-      new THREE.Vector2(
-        (state.pointer.x * viewport.width) / 2,
-        (state.pointer.y * viewport.height) / 2
-      ),
-      0.15 // Lerp mouse for smooth tracking
+    // Mouse Interaction & Speed Tracking
+    const currentMouse = new THREE.Vector2(
+      (state.pointer.x * viewport.width) / 2,
+      (state.pointer.y * viewport.height) / 2
     );
+    
+    // Calculate speed based on distance traveled over delta
+    const speed = currentMouse.distanceTo(prevMouse.current) / (delta || 0.01);
+    prevMouse.current.copy(currentMouse);
+    
+    // Lerp speed to avoid jagged jumps
+    mat.uniforms.uPointerSpeed.value = THREE.MathUtils.lerp(
+      mat.uniforms.uPointerSpeed.value, 
+      speed, 
+      0.1
+    );
+
+    mat.uniforms.uMouse.value.lerp(currentMouse, 0.15);
   });
 
   return (
-    <points>
+    <group>
+      {/* Background Quantum Lattice */}
+      <points>
+        <bufferGeometry>
+          <bufferAttribute attach="attributes-position" count={2000} array={latticePoints} itemSize={3} />
+        </bufferGeometry>
+        <pointsMaterial color="#00ffa6" size={0.05} transparent opacity={0.15} depthWrite={false} blending={THREE.AdditiveBlending} />
+      </points>
+
+      {/* Main Dimension Portal */}
+      <points>
       <bufferGeometry>
         <bufferAttribute attach="attributes-position" count={NUM_PARTICLES} array={aPosOrb} itemSize={3} />
         <bufferAttribute attach="attributes-aPosOrb" count={NUM_PARTICLES} array={aPosOrb} itemSize={3} />
@@ -226,6 +285,7 @@ export default function DimensionPortal({ isOpen = false }) {
         depthWrite={false}
         blending={THREE.AdditiveBlending}
       />
-    </points>
+      </points>
+    </group>
   );
 }
