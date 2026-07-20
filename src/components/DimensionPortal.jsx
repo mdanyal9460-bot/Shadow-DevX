@@ -64,11 +64,11 @@ void main() {
         // Text Position (Completely Static - NO Wave Motion)
         vec3 textPos = aPosText;
         
-        // The BOOM mathematical explosion for Line 2 (Triggers right at 1.5)
+        // The BOOM mathematical explosion for Line 2
         float boom = 0.0;
         if (aLineIndex > 0.5) {
             float progress = uProgress - 1.0;
-            float boomTiming = smoothstep(0.45, 0.5, progress) * smoothstep(0.65, 0.5, progress);
+            float boomTiming = smoothstep(0.35, 0.5, progress) * smoothstep(0.85, 0.7, progress);
             boom = boomTiming; 
             
             float noise = sin(aPosText.x * 50.0) * 15.0;
@@ -104,7 +104,7 @@ void main() {
     float boomFactor = 0.0;
     if (aLineIndex > 0.5) {
         float progress = max(0.0, uProgress - 1.0);
-        boomFactor = smoothstep(0.45, 0.5, progress) * smoothstep(0.65, 0.5, progress);
+        boomFactor = smoothstep(0.35, 0.5, progress) * smoothstep(0.85, 0.7, progress);
     }
     gl_PointSize = (12.0 / -mvPosition.z) * (1.0 + sin(uTime * 3.0 + pos.x) * 0.2) + (boomFactor * 40.0);
     gl_Position = projectionMatrix * mvPosition;
@@ -261,15 +261,15 @@ export default function DimensionPortal({ isOpen = false }) {
     // Time
     mat.uniforms.uTime.value = state.clock.elapsedTime;
     
-    // Smooth transition (Aggressive/Fast)
+    // Smooth transition (Sweet Spot)
     mat.uniforms.uProgress.value = THREE.MathUtils.lerp(
       mat.uniforms.uProgress.value,
       targetProgress.current,
-      delta * 1.8 // Aggressive Morph speed for instantaneous reveal
+      delta * 0.9 // Sweet Spot Morph speed for physical weight
     );
     
     // Camera Shake during BOOM phase
-    if (mat.uniforms.uProgress.value > 1.45 && mat.uniforms.uProgress.value < 1.65) {
+    if (mat.uniforms.uProgress.value > 1.4 && mat.uniforms.uProgress.value < 1.8) {
       const shakeAmount = Math.sin(state.clock.elapsedTime * 80) * 0.5;
       state.camera.position.x = shakeAmount;
       state.camera.position.y = Math.cos(state.clock.elapsedTime * 75) * 0.5;

@@ -9,7 +9,7 @@ export default function ProjectDimension() {
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsOpen(true);
-    }, 500); // Fast 0.5s delay for explosive reveal
+    }, 1000); // 1.0s delay to establish the scene before blast
     return () => clearTimeout(timer);
   }, []);
 
