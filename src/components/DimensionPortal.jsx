@@ -268,11 +268,11 @@ export default function DimensionPortal({ isOpen = false }) {
     // Camera Shake during BOOM phase
     if (mat.uniforms.uProgress.value > 1.65 && mat.uniforms.uProgress.value < 1.8) {
       const shakeAmount = Math.sin(state.clock.elapsedTime * 50) * 0.3;
-      camera.position.x = shakeAmount;
-      camera.position.y = Math.cos(state.clock.elapsedTime * 45) * 0.3;
+      state.camera.position.x = shakeAmount;
+      state.camera.position.y = Math.cos(state.clock.elapsedTime * 45) * 0.3;
     } else {
-      camera.position.x = THREE.MathUtils.lerp(camera.position.x, 0, 0.1);
-      camera.position.y = THREE.MathUtils.lerp(camera.position.y, 0, 0.1);
+      state.camera.position.x = THREE.MathUtils.lerp(state.camera.position.x, 0, 0.1);
+      state.camera.position.y = THREE.MathUtils.lerp(state.camera.position.y, 0, 0.1);
     }
     
     // Mouse Interaction & Speed Tracking
