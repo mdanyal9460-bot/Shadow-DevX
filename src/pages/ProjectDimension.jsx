@@ -28,7 +28,7 @@ export default function ProjectDimension() {
           {/* Ensure DimensionPortal blasts after a slight delay */}
           <DimensionPortal isOpen={isOpen} />
           <EffectComposer disableNormalPass>
-            <Bloom luminanceThreshold={0.5} mipmapBlur intensity={2.5} />
+            <Bloom luminanceThreshold={0.1} mipmapBlur intensity={3.0} />
           </EffectComposer>
         </Canvas>
       </Suspense>

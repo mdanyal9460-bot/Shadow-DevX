@@ -10,6 +10,7 @@ uniform float uTime;
 uniform float uProgress;
 uniform vec2 uMouse;
 uniform float uPointerSpeed;
+uniform float uPulseTimer;
 
 attribute vec3 aPosOrb;
 attribute vec3 aPosVortex;
@@ -40,12 +41,13 @@ void main() {
         
         pos = mix(breathingOrb, swirlingVortex, p);
         
-        // Color transition (Golden/Mint -> Indigo/Blue)
-        vec3 targetColor = mix(vec3(1.0, 0.7, 0.2), vec3(0.2, 0.4, 1.0), p); 
+        // Color transition (Crimson -> Void Purple)
+        vec3 targetColor = mix(vec3(1.0, 0.0, 0.0), vec3(0.1, 0.0, 0.2), p); 
         vColor = mix(vColor, targetColor, p * 0.8);
         
     } else {
-        float p2 = smoothstep(0.0, 1.0, uProgress - 1.0);
+        // Aggressive Lock-in: Very sharp smoothstep for an instant snap
+        float p2 = smoothstep(0.0, 0.4, uProgress - 1.0);
         
         // Swirling Vortex (maintain motion)
         float angle = atan(aPosVortex.z, aPosVortex.x) + uTime * 3.0;
@@ -82,14 +84,19 @@ void main() {
         
         pos = mix(swirlingVortex, textPos, p2);
         
-        // Color transition to text (Amber/Violet/Cyan gradient based on position)
-        vec3 textColor = mix(vec3(1.0, 0.5, 0.0), vec3(0.0, 1.0, 0.8), (sin(textPos.x * 0.5 + uTime) + 1.0) * 0.5);
-        vColor = mix(vec3(0.2, 0.4, 1.0), textColor, p2);
+        // Color transition to text (Blood Crimson to Neon Red)
+        vec3 textColor = mix(vec3(1.0, 0.0, 0.0), vec3(1.0, 0.26, 0.26), (sin(textPos.x * 0.5 + uTime) + 1.0) * 0.5);
+        vColor = mix(vec3(0.1, 0.0, 0.2), textColor, p2);
+        
+        // The Atomic Pulse: Temporary intense glow multiplier right as it locks
+        float pulse = max(0.0, sin(uPulseTimer * 3.14159)) * 3.0;
+        vColor *= (1.0 + pulse);
     }
     
     vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
-    // Dynamic point size scaling by distance and time
-    gl_PointSize = (15.0 / -mvPosition.z) * (1.0 + sin(uTime * 3.0 + pos.x) * 0.2);
+    // Dynamic point size scaling by distance, time, and pulse
+    float pulseScale = uPulseTimer > 0.0 ? max(0.0, sin(uPulseTimer * 3.14159)) * 5.0 : 0.0;
+    gl_PointSize = (15.0 / -mvPosition.z) * (1.0 + sin(uTime * 3.0 + pos.x) * 0.2 + pulseScale);
     gl_Position = projectionMatrix * mvPosition;
 }
 `;
@@ -150,10 +157,10 @@ export default function DimensionPortal({ isOpen = false }) {
     ctx.fillStyle = '#000';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = '#fff';
-    ctx.font = 'bold 80px "Inter", sans-serif'; // Modern Sans Serif
+    ctx.font = 'bold 120px "Arial Black", sans-serif'; // Maximum Bold/Impactful Font
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText("Welcome to my dimension", canvas.width / 2, canvas.height / 2);
+    ctx.fillText("I AM ATOMIC", canvas.width / 2, canvas.height / 2);
     
     const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
     const textPositions = [];
@@ -170,12 +177,15 @@ export default function DimensionPortal({ isOpen = false }) {
         }
       }
     }
+    
+    // Fallback if sampling missed (shouldn't happen, but ensures buffer fills)
+    if (textPositions.length === 0) textPositions.push(new THREE.Vector3(0,0,0));
 
     const baseColors = [
-      new THREE.Color('#ffb347'), // Amber
-      new THREE.Color('#00ffa6'), // Mint
-      new THREE.Color('#d8b4e2'), // Violet
-      new THREE.Color('#ffd700'), // Pale-gold
+      new THREE.Color('#ff0000'), // Deep Blood Crimson
+      new THREE.Color('#1a0033'), // Void Purple/Black
+      new THREE.Color('#ff4444'), // Stark, Neon Red
+      new THREE.Color('#990000'), // Dark Crimson
     ];
 
     // Generate Buffers
@@ -215,7 +225,8 @@ export default function DimensionPortal({ isOpen = false }) {
     uTime: { value: 0 },
     uProgress: { value: 0 },
     uMouse: { value: new THREE.Vector2(0, 0) },
-    uPointerSpeed: { value: 0 }
+    uPointerSpeed: { value: 0 },
+    uPulseTimer: { value: 0 }
   }), []);
 
   useEffect(() => {
@@ -230,12 +241,19 @@ export default function DimensionPortal({ isOpen = false }) {
     // Time
     mat.uniforms.uTime.value = state.clock.elapsedTime;
     
-    // Smooth transition
+    // Smooth transition (Aggressive Snap)
     mat.uniforms.uProgress.value = THREE.MathUtils.lerp(
       mat.uniforms.uProgress.value,
       targetProgress.current,
-      delta * 0.8 // Morph speed
+      delta * 2.5 // Increased Morph speed for high-energy snap
     );
+    
+    // The Atomic Pulse logic
+    if (isOpen && mat.uniforms.uProgress.value > 1.8 && mat.uniforms.uPulseTimer.value < 1.0) {
+      mat.uniforms.uPulseTimer.value += delta * 2.0; // 0.5s duration
+    } else if (!isOpen) {
+      mat.uniforms.uPulseTimer.value = 0.0;
+    }
     
     // Mouse Interaction & Speed Tracking
     const currentMouse = new THREE.Vector2(
@@ -264,7 +282,7 @@ export default function DimensionPortal({ isOpen = false }) {
         <bufferGeometry>
           <bufferAttribute attach="attributes-position" count={2000} array={latticePoints} itemSize={3} />
         </bufferGeometry>
-        <pointsMaterial color="#00ffa6" size={0.05} transparent opacity={0.15} depthWrite={false} blending={THREE.AdditiveBlending} />
+        <pointsMaterial color="#ff0000" size={0.05} transparent opacity={0.15} depthWrite={false} blending={THREE.AdditiveBlending} />
       </points>
 
       {/* Main Dimension Portal */}
