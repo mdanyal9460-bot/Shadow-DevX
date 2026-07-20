@@ -11,6 +11,7 @@ uniform float uProgress;
 uniform vec2 uMouse;
 uniform float uPointerSpeed;
 uniform float uPulseTimer;
+uniform float uBasePointSize;
 
 attribute vec3 aPosOrb;
 attribute vec3 aPosVortex;
@@ -61,8 +62,12 @@ void main() {
         float radius = length(aPosVortex.xz);
         vec3 swirlingVortex = vec3(cos(angle) * radius, aPosVortex.y, sin(angle) * radius);
         
-        // Text Position (Completely Static - NO Wave Motion)
+        // Text Position (Microscopic Living Dark Energy Breathing)
         vec3 textPos = aPosText;
+        float breathingScale = 0.04; 
+        textPos.x += sin(uTime * 2.0 + textPos.y * 10.0) * breathingScale;
+        textPos.y += cos(uTime * 2.5 + textPos.x * 10.0) * breathingScale;
+        textPos.z += sin(uTime * 1.5 + textPos.x * 5.0) * (breathingScale * 2.0);
         
         // The BOOM mathematical explosion for Line 2
         float boom = 0.0;
@@ -106,7 +111,7 @@ void main() {
         float progress = max(0.0, uProgress - 1.0);
         boomFactor = smoothstep(0.35, 0.5, progress) * smoothstep(0.85, 0.7, progress);
     }
-    gl_PointSize = (12.0 / -mvPosition.z) * (1.0 + sin(uTime * 3.0 + pos.x) * 0.2) + (boomFactor * 40.0);
+    gl_PointSize = (uBasePointSize / -mvPosition.z) * (1.0 + sin(uTime * 3.0 + pos.x) * 0.2) + (boomFactor * 40.0);
     gl_Position = projectionMatrix * mvPosition;
 }
 `;
@@ -114,22 +119,14 @@ void main() {
 const fragmentShader = `
 varying vec3 vColor;
 void main() {
-    // Crystal Prism Splatting & Refraction Math
-    vec2 uv = gl_PointCoord - 0.5;
-    float radius = length(uv);
-    float angle = atan(uv.y, uv.x);
+    // Soft radial gradient for plasma particle
+    float dist = distance(gl_PointCoord, vec2(0.5));
+    if (dist > 0.5) discard;
+    float alpha = smoothstep(0.5, 0.0, dist);
     
-    // Add angular sharp cuts to create fractured star/crystal shapes
-    float cuts = sin(angle * 6.0) * 0.1 + cos(angle * 3.0) * 0.1;
-    if (radius > 0.4 + cuts) discard;
-    
-    // Refraction Highlights (Bright white edges)
-    float innerGlow = smoothstep(0.4 + cuts, 0.0, radius);
-    float edgeHighlight = smoothstep(0.3 + cuts, 0.4 + cuts, radius);
-    
-    // Mix base color with crystalline edge light
-    vec3 crystalColor = mix(vColor, vec3(1.0), edgeHighlight * 0.8);
-    gl_FragColor = vec4(crystalColor, innerGlow * 0.9);
+    // Intense hot core, softer outer glow
+    vec3 coreColor = mix(vColor, vec3(1.0), smoothstep(0.2, 0.0, dist) * 0.8);
+    gl_FragColor = vec4(coreColor, alpha * 0.85);
 }
 `;
 
@@ -165,19 +162,21 @@ export default function DimensionPortal({ isOpen = false }) {
     canvas.height = 512;
     const ctx = canvas.getContext('2d', { willReadFrequently: true });
     
+    const isMobile = window.innerWidth < 768;
+    
     ctx.fillStyle = '#000';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = '#fff';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     
-    // Line 1: Welcome (Slightly smaller, placed higher)
-    ctx.font = 'bold 50px "Arial Black", sans-serif';
-    ctx.fillText("WELCOME TO MY DIMENSION", canvas.width / 2, canvas.height / 2 - 50);
+    // Line 1: Welcome
+    ctx.font = \`bold \${isMobile ? 22 : 50}px "Arial Black", sans-serif\`;
+    ctx.fillText("WELCOME TO MY DIMENSION", canvas.width / 2, canvas.height / 2 - (isMobile ? 25 : 50));
     
-    // Line 2: Atomic (Massive, placed lower)
-    ctx.font = 'bold 110px "Arial Black", sans-serif';
-    ctx.fillText("I AM ATOMIC", canvas.width / 2, canvas.height / 2 + 40);
+    // Line 2: Atomic
+    ctx.font = \`bold \${isMobile ? 45 : 110}px "Arial Black", sans-serif\`;
+    ctx.fillText("I AM ATOMIC", canvas.width / 2, canvas.height / 2 + (isMobile ? 20 : 40));
     
     const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
     const textPositions = [];
@@ -200,9 +199,9 @@ export default function DimensionPortal({ isOpen = false }) {
 
     const baseColors = [
       new THREE.Color('#ff0000'), // Deep Blood Crimson
-      new THREE.Color('#1a0033'), // Void Purple/Black
-      new THREE.Color('#ff4444'), // Stark, Neon Red
-      new THREE.Color('#990000'), // Dark Crimson
+      new THREE.Color('#2a004d'), // Obsidian Purple
+      new THREE.Color('#ff3333'), // Neon Red
+      new THREE.Color('#000000'), // Absolute Black
     ];
 
     // Generate Buffers
@@ -246,7 +245,8 @@ export default function DimensionPortal({ isOpen = false }) {
     uProgress: { value: 0 },
     uMouse: { value: new THREE.Vector2(0, 0) },
     uPointerSpeed: { value: 0 },
-    uPulseTimer: { value: 0 }
+    uPulseTimer: { value: 0 },
+    uBasePointSize: { value: window.innerWidth < 768 ? 7.5 : 12.0 }
   }), []);
 
   useEffect(() => {
