@@ -61,9 +61,9 @@ function ProjectsSection() {
       link: "https://shadowdev-portfolio.vercel.app/" 
     },
     { 
-      title: "E-Commerce WebGL", 
-      desc: "High-performance 3D product configurator built with Next.js and Tailwind.",
-      link: "#" 
+      title: "Secret Dimension Portal", 
+      desc: "An immersive, standalone WebGL particle experiment. Proceed with caution.",
+      link: "/dimension" 
     }
   ];
 
@@ -103,6 +103,7 @@ function ProjectsSection() {
             </motion.div>
           ))}
         </div>
+
       </motion.div>
     </section>
   );

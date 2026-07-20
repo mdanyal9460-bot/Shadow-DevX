@@ -2,7 +2,7 @@ import React, { useRef, useMemo, useEffect } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 
-const NUM_PARTICLES = 15000;
+const NUM_PARTICLES = 40000;
 
 // Custom Shader for high-performance morphing and interaction
 const vertexShader = `
