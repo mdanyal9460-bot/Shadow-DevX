@@ -9,7 +9,7 @@ export default function ProjectDimension() {
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsOpen(true);
-    }, 2500); // Increased delay to allow viewers to admire the initial orb/vortex
+    }, 500); // Fast 0.5s delay for explosive reveal
     return () => clearTimeout(timer);
   }, []);
 

@@ -48,11 +48,11 @@ void main() {
         
     } else {
         // Sequential Lock-in Logic
-        // Line 1: Welcome (uProgress 1.0 to 1.5)
-        float pLine1 = smoothstep(0.0, 0.5, uProgress - 1.0);
+        // Line 1: Welcome (uProgress 1.0 to 1.4 - Instant Lock)
+        float pLine1 = smoothstep(0.0, 0.4, uProgress - 1.0);
         
-        // Line 2: Atomic (uProgress 1.8 to 2.5)
-        float pLine2 = smoothstep(0.8, 1.5, uProgress - 1.0);
+        // Line 2: Atomic (uProgress 1.6 to 2.2)
+        float pLine2 = smoothstep(0.6, 1.2, uProgress - 1.0);
         
         float pActive = mix(pLine1, pLine2, aLineIndex);
         
@@ -64,15 +64,17 @@ void main() {
         // Text Position (Completely Static - NO Wave Motion)
         vec3 textPos = aPosText;
         
-        // The BOOM mathematical explosion for Line 2 (Triggers heavily around uProgress 1.6 - 1.8)
+        // The BOOM mathematical explosion for Line 2 (Triggers right at 1.5)
         float boom = 0.0;
         if (aLineIndex > 0.5) {
-            float boomTiming = smoothstep(0.5, 0.7, uProgress - 1.0) * smoothstep(0.9, 0.7, uProgress - 1.0);
-            boom = boomTiming * 5.0; 
+            float progress = uProgress - 1.0;
+            float boomTiming = smoothstep(0.45, 0.5, progress) * smoothstep(0.65, 0.5, progress);
+            boom = boomTiming; 
             
+            float noise = sin(aPosText.x * 50.0) * 15.0;
             float hash = fract(sin(dot(aPosText.xyz, vec3(12.9898, 78.233, 45.164))) * 43758.5453);
             vec3 chaosDir = normalize(vec3(hash - 0.5, fract(hash * 2.0) - 0.5, fract(hash * 3.0) - 0.5));
-            textPos += chaosDir * boom * 8.0; 
+            textPos += chaosDir * boom * abs(noise); 
         }
         
         // Mouse Repulsion Logic & Fracture
@@ -101,9 +103,10 @@ void main() {
     // Dynamic point size scaling by distance, time, and boom explosion
     float boomFactor = 0.0;
     if (aLineIndex > 0.5) {
-        boomFactor = smoothstep(0.5, 0.7, max(0.0, uProgress - 1.0)) * smoothstep(0.9, 0.7, max(0.0, uProgress - 1.0));
+        float progress = max(0.0, uProgress - 1.0);
+        boomFactor = smoothstep(0.45, 0.5, progress) * smoothstep(0.65, 0.5, progress);
     }
-    gl_PointSize = (12.0 / -mvPosition.z) * (1.0 + sin(uTime * 3.0 + pos.x) * 0.2) + (boomFactor * 20.0);
+    gl_PointSize = (12.0 / -mvPosition.z) * (1.0 + sin(uTime * 3.0 + pos.x) * 0.2) + (boomFactor * 40.0);
     gl_Position = projectionMatrix * mvPosition;
 }
 `;
@@ -258,21 +261,21 @@ export default function DimensionPortal({ isOpen = false }) {
     // Time
     mat.uniforms.uTime.value = state.clock.elapsedTime;
     
-    // Smooth transition (Majestic/Slow)
+    // Smooth transition (Aggressive/Fast)
     mat.uniforms.uProgress.value = THREE.MathUtils.lerp(
       mat.uniforms.uProgress.value,
       targetProgress.current,
-      delta * 0.5 // Slowed down Morph speed for majestic reveal
+      delta * 1.8 // Aggressive Morph speed for instantaneous reveal
     );
     
     // Camera Shake during BOOM phase
-    if (mat.uniforms.uProgress.value > 1.65 && mat.uniforms.uProgress.value < 1.8) {
-      const shakeAmount = Math.sin(state.clock.elapsedTime * 50) * 0.3;
+    if (mat.uniforms.uProgress.value > 1.45 && mat.uniforms.uProgress.value < 1.65) {
+      const shakeAmount = Math.sin(state.clock.elapsedTime * 80) * 0.5;
       state.camera.position.x = shakeAmount;
-      state.camera.position.y = Math.cos(state.clock.elapsedTime * 45) * 0.3;
+      state.camera.position.y = Math.cos(state.clock.elapsedTime * 75) * 0.5;
     } else {
-      state.camera.position.x = THREE.MathUtils.lerp(state.camera.position.x, 0, 0.1);
-      state.camera.position.y = THREE.MathUtils.lerp(state.camera.position.y, 0, 0.1);
+      state.camera.position.x = THREE.MathUtils.lerp(state.camera.position.x, 0, 0.3); // Fast recovery snap
+      state.camera.position.y = THREE.MathUtils.lerp(state.camera.position.y, 0, 0.3);
     }
     
     // Mouse Interaction & Speed Tracking
