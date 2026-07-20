@@ -54,15 +54,15 @@ void main() {
     // Phase 1: Line 1 Lock (0.4 to 1.0)
     float pLine1 = smoothstep(0.4, 1.0, uProgress);
     
-    // Phase 4: Line 2 Lock (2.4 to 2.8) - Forms after the blast
-    float pLine2 = smoothstep(2.4, 2.8, uProgress);
+    // Phase 4: Line 2 Lock (3.0 to 3.4) - Forms after the blast
+    float pLine2 = smoothstep(3.0, 3.4, uProgress);
     
     float pActive = mix(pLine1, pLine2, aLineIndex);
     
-    // Phase 3: Second Boom for Line 2 (2.0 to 2.4)
+    // Phase 3: Second Boom for Line 2 (2.5 to 3.0)
     float secondBoomTiming = 0.0;
     if (aLineIndex > 0.5) {
-        secondBoomTiming = smoothstep(2.0, 2.2, uProgress) * smoothstep(2.5, 2.2, uProgress);
+        secondBoomTiming = smoothstep(2.5, 2.75, uProgress) * smoothstep(3.0, 2.75, uProgress);
         float noise = sin(aPosText.x * 50.0) * 15.0;
         float hash2 = fract(sin(dot(aPosText.xyz, vec3(12.9898, 78.233, 45.164))) * 43758.5453);
         vec3 chaos2 = normalize(vec3(hash2 - 0.5, fract(hash2 * 2.0) - 0.5, fract(hash2 * 3.0) - 0.5));
@@ -85,10 +85,8 @@ void main() {
     
     pos = mix(basePos, textPos, pActive);
     
-    // Color Logic
-    vec3 targetColor = mix(aColor, vec3(0.1, 0.0, 0.2), pVortex);
-    vec3 finalTextColor = mix(vec3(1.0, 0.0, 0.0), vec3(1.0, 0.26, 0.26), (sin(textPos.x * 0.5 + uTime) + 1.0) * 0.5);
-    vec3 baseColor = mix(targetColor, finalTextColor, pActive);
+    // Vibrant Color Logic
+    vec3 baseColor = aColor; // Maintain multi-color spectrum
     
     // Phase 3: Flash extreme white/neon red during second boom
     if (aLineIndex > 0.5) {
@@ -164,13 +162,13 @@ export default function DimensionPortal({ isOpen = false }) {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     
-    // Line 1: Welcome
-    ctx.font = `bold ${isMobile ? 22 : 50}px "Arial Black", sans-serif`;
-    ctx.fillText("WELCOME TO MY DIMENSION", canvas.width / 2, canvas.height / 2 - (isMobile ? 25 : 50));
+    // Line 1: Welcome (High-Tech font, shifted higher)
+    ctx.font = `bold ${isMobile ? 22 : 50}px "Courier New", monospace`;
+    ctx.fillText("WELCOME TO MY DIMENSION", canvas.width / 2, canvas.height / 2 - (isMobile ? 35 : 70));
     
-    // Line 2: Atomic
+    // Line 2: Atomic (Massive font, shifted lower)
     ctx.font = `bold ${isMobile ? 45 : 110}px "Arial Black", sans-serif`;
-    ctx.fillText("I AM ATOMIC", canvas.width / 2, canvas.height / 2 + (isMobile ? 20 : 40));
+    ctx.fillText("I AM ATOMIC", canvas.width / 2, canvas.height / 2 + (isMobile ? 25 : 60));
     
     const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
     const textPositions = [];
@@ -192,10 +190,13 @@ export default function DimensionPortal({ isOpen = false }) {
     if (textPositions.length === 0) textPositions.push(new THREE.Vector3(0,0,0));
 
     const baseColors = [
-      new THREE.Color('#ff0000'), // Deep Blood Crimson
-      new THREE.Color('#2a004d'), // Obsidian Purple
-      new THREE.Color('#ff3333'), // Neon Red
-      new THREE.Color('#000000'), // Absolute Black
+      new THREE.Color('#00ffff'), // Cyan
+      new THREE.Color('#39ff14'), // Neon Green
+      new THREE.Color('#6a0dad'), // Deep Purple
+      new THREE.Color('#ff7f00'), // Bright Orange
+      new THREE.Color('#7df9ff'), // Electric Blue
+      new THREE.Color('#ff00ff'), // Hot Pink
+      new THREE.Color('#ffffff'), // White
     ];
 
     // Generate Buffers
@@ -244,8 +245,8 @@ export default function DimensionPortal({ isOpen = false }) {
   }), []);
 
   useEffect(() => {
-    // Phase 1: 0.0-1.0, Phase 2: Pause 1.0-2.0, Phase 3: Boom 2.0-2.4, Phase 4: Lock 2.4-2.8
-    targetProgress.current = isOpen ? 3.0 : 0.0;
+    // Phase 1: 0.0-1.0, Phase 2: Pause 1.0-2.5, Phase 3: Boom 2.5-3.0, Phase 4: Lock 3.0-3.5
+    targetProgress.current = isOpen ? 3.5 : 0.0;
   }, [isOpen]);
 
   useFrame((state, delta) => {
@@ -255,11 +256,11 @@ export default function DimensionPortal({ isOpen = false }) {
     // Time
     mat.uniforms.uTime.value = state.clock.elapsedTime;
     
-    // Linear transition for exact suspense pacing
+    // Linear transition for exact suspense pacing (delta * 1.0 means 1 unit per second)
     if (targetProgress.current > 0) {
-      mat.uniforms.uProgress.value = Math.min(3.0, mat.uniforms.uProgress.value + delta * 0.6);
+      mat.uniforms.uProgress.value = Math.min(3.5, mat.uniforms.uProgress.value + delta * 1.0);
     } else {
-      mat.uniforms.uProgress.value = Math.max(0.0, mat.uniforms.uProgress.value - delta * 0.6);
+      mat.uniforms.uProgress.value = Math.max(0.0, mat.uniforms.uProgress.value - delta * 1.0);
     }
     
     const prog = mat.uniforms.uProgress.value;
@@ -270,7 +271,7 @@ export default function DimensionPortal({ isOpen = false }) {
       state.camera.position.y = Math.cos(state.clock.elapsedTime * 55) * 0.2;
     }
     // Phase 3: Second massive boom shake (Heavy)
-    else if (prog > 2.05 && prog < 2.35) {
+    else if (prog > 2.55 && prog < 2.95) {
       state.camera.position.x = Math.sin(state.clock.elapsedTime * 100) * 0.6;
       state.camera.position.y = Math.cos(state.clock.elapsedTime * 95) * 0.6;
     } 
