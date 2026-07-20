@@ -171,11 +171,11 @@ export default function DimensionPortal({ isOpen = false }) {
     ctx.textBaseline = 'middle';
     
     // Line 1: Welcome
-    ctx.font = \`bold \${isMobile ? 22 : 50}px "Arial Black", sans-serif\`;
+    ctx.font = `bold ${isMobile ? 22 : 50}px "Arial Black", sans-serif`;
     ctx.fillText("WELCOME TO MY DIMENSION", canvas.width / 2, canvas.height / 2 - (isMobile ? 25 : 50));
     
     // Line 2: Atomic
-    ctx.font = \`bold \${isMobile ? 45 : 110}px "Arial Black", sans-serif\`;
+    ctx.font = `bold ${isMobile ? 45 : 110}px "Arial Black", sans-serif`;
     ctx.fillText("I AM ATOMIC", canvas.width / 2, canvas.height / 2 + (isMobile ? 20 : 40));
     
     const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
