@@ -16,6 +16,7 @@ attribute vec3 aPosOrb;
 attribute vec3 aPosVortex;
 attribute vec3 aPosText;
 attribute vec3 aColor;
+attribute float aLineIndex;
 
 varying vec3 vColor;
 
@@ -46,52 +47,63 @@ void main() {
         vColor = mix(vColor, targetColor, p * 0.8);
         
     } else {
-        // Majestic Lock-in: Slower smoothstep for readable formation
-        float p2 = smoothstep(0.0, 1.0, uProgress - 1.0);
+        // Sequential Lock-in Logic
+        // Line 1: Welcome (uProgress 1.0 to 1.5)
+        float pLine1 = smoothstep(0.0, 0.5, uProgress - 1.0);
+        
+        // Line 2: Atomic (uProgress 1.8 to 2.5)
+        float pLine2 = smoothstep(0.8, 1.5, uProgress - 1.0);
+        
+        float pActive = mix(pLine1, pLine2, aLineIndex);
         
         // Swirling Vortex (maintain motion)
         float angle = atan(aPosVortex.z, aPosVortex.x) + uTime * 3.0;
         float radius = length(aPosVortex.xz);
         vec3 swirlingVortex = vec3(cos(angle) * radius, aPosVortex.y, sin(angle) * radius);
         
-        // Text Position with Living Current (Fluid flow drift)
+        // Text Position (Completely Static - NO Wave Motion)
         vec3 textPos = aPosText;
-        textPos.x += sin(uTime * 1.5 + textPos.y * 0.5) * 0.2;
-        textPos.y += cos(uTime * 1.5 + textPos.x * 0.5) * 0.2;
+        
+        // The BOOM mathematical explosion for Line 2 (Triggers heavily around uProgress 1.6 - 1.8)
+        float boom = 0.0;
+        if (aLineIndex > 0.5) {
+            float boomTiming = smoothstep(0.5, 0.7, uProgress - 1.0) * smoothstep(0.9, 0.7, uProgress - 1.0);
+            boom = boomTiming * 5.0; 
+            
+            float hash = fract(sin(dot(aPosText.xyz, vec3(12.9898, 78.233, 45.164))) * 43758.5453);
+            vec3 chaosDir = normalize(vec3(hash - 0.5, fract(hash * 2.0) - 0.5, fract(hash * 3.0) - 0.5));
+            textPos += chaosDir * boom * 8.0; 
+        }
         
         // Mouse Repulsion Logic & Fracture
         float dist = distance(textPos.xy, uMouse);
-        
-        // 1. Slow Speed: Standard Ripple
         if (dist < 3.0) {
             vec2 dir = normalize(textPos.xy - uMouse);
             textPos.xy += dir * (3.0 - dist) * 0.5;
             textPos.z += (3.0 - dist) * 0.5;
         }
         
-        // 2. High Speed: Chaotic Fracture
         float fractureEffect = smoothstep(30.0, 100.0, uPointerSpeed);
         if (fractureEffect > 0.0 && dist < 8.0) {
-            // Generate pseudo-random hash for each particle based on its position
             float hash = fract(sin(dot(aPosText.xyz, vec3(12.9898, 78.233, 45.164))) * 43758.5453);
             vec3 chaosDir = normalize(vec3(hash - 0.5, fract(hash * 2.0) - 0.5, fract(hash * 3.0) - 0.5));
-            // Blast outward proportionally to speed and inversely to distance
             textPos += chaosDir * fractureEffect * (8.0 - dist) * 1.5;
         }
         
-        // Add subtle continuous breathing to the text Z-axis
-        textPos.z += sin(uTime * 2.0 + textPos.x * 0.5) * 0.2;
+        pos = mix(swirlingVortex, textPos, pActive);
         
-        pos = mix(swirlingVortex, textPos, p2);
-        
-        // Color transition to text (Blood Crimson to Neon Red)
+        // Color transition
         vec3 textColor = mix(vec3(1.0, 0.0, 0.0), vec3(1.0, 0.26, 0.26), (sin(textPos.x * 0.5 + uTime) + 1.0) * 0.5);
-        vColor = mix(vec3(0.1, 0.0, 0.2), textColor, p2);
+        vColor = mix(vec3(0.1, 0.0, 0.2), textColor, pActive);
     }
     
     vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
-    // Dynamic point size scaling by distance and time (reduced for clarity)
-    gl_PointSize = (12.0 / -mvPosition.z) * (1.0 + sin(uTime * 3.0 + pos.x) * 0.2);
+    // Dynamic point size scaling by distance, time, and boom explosion
+    float boomFactor = 0.0;
+    if (aLineIndex > 0.5) {
+        boomFactor = smoothstep(0.5, 0.7, max(0.0, uProgress - 1.0)) * smoothstep(0.9, 0.7, max(0.0, uProgress - 1.0));
+    }
+    gl_PointSize = (12.0 / -mvPosition.z) * (1.0 + sin(uTime * 3.0 + pos.x) * 0.2) + (boomFactor * 20.0);
     gl_Position = projectionMatrix * mvPosition;
 }
 `;
@@ -137,11 +149,12 @@ export default function DimensionPortal({ isOpen = false }) {
     return new Float32Array(points);
   }, []);
 
-  const [aPosOrb, aPosVortex, aPosText, aColor] = useMemo(() => {
+  const [aPosOrb, aPosVortex, aPosText, aColor, aLineIndex] = useMemo(() => {
     const orb = new Float32Array(NUM_PARTICLES * 3);
     const vortex = new Float32Array(NUM_PARTICLES * 3);
     const text = new Float32Array(NUM_PARTICLES * 3);
     const color = new Float32Array(NUM_PARTICLES * 3);
+    const lineIndex = new Float32Array(NUM_PARTICLES);
 
     // 1. Text Coordinates Extraction via Hidden Canvas
     const canvas = document.createElement('canvas');
@@ -211,6 +224,9 @@ export default function DimensionPortal({ isOpen = false }) {
       text[i * 3] = tp.x;
       text[i * 3 + 1] = tp.y;
       text[i * 3 + 2] = tp.z;
+      
+      // Determine Line 1 vs Line 2 based on Y coordinate (Y is inverted here, so tp.y > 0 is top half)
+      lineIndex[i] = tp.y > 0.0 ? 0.0 : 1.0;
 
       // -- Base Colors
       const col = baseColors[Math.floor(Math.random() * baseColors.length)];
@@ -219,7 +235,7 @@ export default function DimensionPortal({ isOpen = false }) {
       color[i * 3 + 2] = col.b;
     }
 
-    return [orb, vortex, text, color];
+    return [orb, vortex, text, color, lineIndex];
   }, []);
 
   const uniforms = useMemo(() => ({
@@ -231,8 +247,8 @@ export default function DimensionPortal({ isOpen = false }) {
   }), []);
 
   useEffect(() => {
-    // 0 = Orb, 1 = Vortex, 2 = Text
-    targetProgress.current = isOpen ? 2.0 : 0.0;
+    // 0 = Orb, 1 = Vortex, 1.0-1.5 = Line 1, 1.8-2.5 = Line 2
+    targetProgress.current = isOpen ? 2.5 : 0.0;
   }, [isOpen]);
 
   useFrame((state, delta) => {
@@ -246,8 +262,18 @@ export default function DimensionPortal({ isOpen = false }) {
     mat.uniforms.uProgress.value = THREE.MathUtils.lerp(
       mat.uniforms.uProgress.value,
       targetProgress.current,
-      delta * 0.4 // Slowed down Morph speed for majestic reveal
+      delta * 0.5 // Slowed down Morph speed for majestic reveal
     );
+    
+    // Camera Shake during BOOM phase
+    if (mat.uniforms.uProgress.value > 1.65 && mat.uniforms.uProgress.value < 1.8) {
+      const shakeAmount = Math.sin(state.clock.elapsedTime * 50) * 0.3;
+      camera.position.x = shakeAmount;
+      camera.position.y = Math.cos(state.clock.elapsedTime * 45) * 0.3;
+    } else {
+      camera.position.x = THREE.MathUtils.lerp(camera.position.x, 0, 0.1);
+      camera.position.y = THREE.MathUtils.lerp(camera.position.y, 0, 0.1);
+    }
     
     // Mouse Interaction & Speed Tracking
     const currentMouse = new THREE.Vector2(
@@ -287,6 +313,7 @@ export default function DimensionPortal({ isOpen = false }) {
         <bufferAttribute attach="attributes-aPosVortex" count={NUM_PARTICLES} array={aPosVortex} itemSize={3} />
         <bufferAttribute attach="attributes-aPosText" count={NUM_PARTICLES} array={aPosText} itemSize={3} />
         <bufferAttribute attach="attributes-aColor" count={NUM_PARTICLES} array={aColor} itemSize={3} />
+        <bufferAttribute attach="attributes-aLineIndex" count={NUM_PARTICLES} array={aLineIndex} itemSize={1} />
       </bufferGeometry>
       <shaderMaterial
         ref={shaderRef}
