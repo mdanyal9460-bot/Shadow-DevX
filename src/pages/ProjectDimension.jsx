@@ -9,7 +9,7 @@ export default function ProjectDimension() {
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsOpen(true);
-    }, 800);
+    }, 2500); // Increased delay to allow viewers to admire the initial orb/vortex
     return () => clearTimeout(timer);
   }, []);
 
@@ -28,7 +28,7 @@ export default function ProjectDimension() {
           {/* Ensure DimensionPortal blasts after a slight delay */}
           <DimensionPortal isOpen={isOpen} />
           <EffectComposer disableNormalPass>
-            <Bloom luminanceThreshold={0.1} mipmapBlur intensity={3.0} />
+            <Bloom luminanceThreshold={0.25} mipmapBlur intensity={1.5} />
           </EffectComposer>
         </Canvas>
       </Suspense>

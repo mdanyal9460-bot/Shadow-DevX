@@ -46,8 +46,8 @@ void main() {
         vColor = mix(vColor, targetColor, p * 0.8);
         
     } else {
-        // Aggressive Lock-in: Very sharp smoothstep for an instant snap
-        float p2 = smoothstep(0.0, 0.4, uProgress - 1.0);
+        // Majestic Lock-in: Slower smoothstep for readable formation
+        float p2 = smoothstep(0.0, 1.0, uProgress - 1.0);
         
         // Swirling Vortex (maintain motion)
         float angle = atan(aPosVortex.z, aPosVortex.x) + uTime * 3.0;
@@ -87,16 +87,11 @@ void main() {
         // Color transition to text (Blood Crimson to Neon Red)
         vec3 textColor = mix(vec3(1.0, 0.0, 0.0), vec3(1.0, 0.26, 0.26), (sin(textPos.x * 0.5 + uTime) + 1.0) * 0.5);
         vColor = mix(vec3(0.1, 0.0, 0.2), textColor, p2);
-        
-        // The Atomic Pulse: Temporary intense glow multiplier right as it locks
-        float pulse = max(0.0, sin(uPulseTimer * 3.14159)) * 3.0;
-        vColor *= (1.0 + pulse);
     }
     
     vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
-    // Dynamic point size scaling by distance, time, and pulse
-    float pulseScale = uPulseTimer > 0.0 ? max(0.0, sin(uPulseTimer * 3.14159)) * 5.0 : 0.0;
-    gl_PointSize = (15.0 / -mvPosition.z) * (1.0 + sin(uTime * 3.0 + pos.x) * 0.2 + pulseScale);
+    // Dynamic point size scaling by distance and time (reduced for clarity)
+    gl_PointSize = (12.0 / -mvPosition.z) * (1.0 + sin(uTime * 3.0 + pos.x) * 0.2);
     gl_Position = projectionMatrix * mvPosition;
 }
 `;
@@ -157,10 +152,16 @@ export default function DimensionPortal({ isOpen = false }) {
     ctx.fillStyle = '#000';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = '#fff';
-    ctx.font = 'bold 120px "Arial Black", sans-serif'; // Maximum Bold/Impactful Font
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText("I AM ATOMIC", canvas.width / 2, canvas.height / 2);
+    
+    // Line 1: Welcome (Slightly smaller, placed higher)
+    ctx.font = 'bold 50px "Arial Black", sans-serif';
+    ctx.fillText("WELCOME TO MY DIMENSION", canvas.width / 2, canvas.height / 2 - 50);
+    
+    // Line 2: Atomic (Massive, placed lower)
+    ctx.font = 'bold 110px "Arial Black", sans-serif';
+    ctx.fillText("I AM ATOMIC", canvas.width / 2, canvas.height / 2 + 40);
     
     const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
     const textPositions = [];
@@ -173,7 +174,7 @@ export default function DimensionPortal({ isOpen = false }) {
           // Normalize coordinates and scale to fit viewport roughly
           const x = (j / canvas.width - 0.5) * 25;
           const y = -(i / canvas.height - 0.5) * 12.5;
-          textPositions.push(new THREE.Vector3(x, y, (Math.random() - 0.5) * 1.5));
+          textPositions.push(new THREE.Vector3(x, y, (Math.random() - 0.5) * 0.4));
         }
       }
     }
@@ -241,19 +242,12 @@ export default function DimensionPortal({ isOpen = false }) {
     // Time
     mat.uniforms.uTime.value = state.clock.elapsedTime;
     
-    // Smooth transition (Aggressive Snap)
+    // Smooth transition (Majestic/Slow)
     mat.uniforms.uProgress.value = THREE.MathUtils.lerp(
       mat.uniforms.uProgress.value,
       targetProgress.current,
-      delta * 2.5 // Increased Morph speed for high-energy snap
+      delta * 0.4 // Slowed down Morph speed for majestic reveal
     );
-    
-    // The Atomic Pulse logic
-    if (isOpen && mat.uniforms.uProgress.value > 1.8 && mat.uniforms.uPulseTimer.value < 1.0) {
-      mat.uniforms.uPulseTimer.value += delta * 2.0; // 0.5s duration
-    } else if (!isOpen) {
-      mat.uniforms.uPulseTimer.value = 0.0;
-    }
     
     // Mouse Interaction & Speed Tracking
     const currentMouse = new THREE.Vector2(
