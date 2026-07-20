@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import App from './App.jsx'
 import ProjectDimension from './pages/ProjectDimension.jsx'
+import ProjectShadow from './pages/ProjectShadow.jsx'
 import './index.css'
 
 ReactDOM.createRoot(document.getElementById('root')).render(
@@ -11,6 +12,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
       <Routes>
         <Route path="/" element={<App />} />
         <Route path="/dimension" element={<ProjectDimension />} />
+        <Route path="/shadow-universe" element={<ProjectShadow />} />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>,

@@ -64,6 +64,11 @@ function ProjectsSection() {
       title: "Secret Dimension Portal", 
       desc: "An immersive, standalone WebGL particle experiment. Proceed with caution.",
       link: "/dimension" 
+    },
+    { 
+      title: "Project Shadow: Immersive 3D Storytelling", 
+      desc: "A scroll-driven cinematic WebGL experience featuring dark glassmorphism and absolute power.",
+      link: "/shadow-universe" 
     }
   ];
 
@@ -80,8 +85,8 @@ function ProjectsSection() {
           Featured <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00ffa6] to-[#00b8ff]">Projects.</span>
         </h2>
         
-        {/* Adjusted grid logic for 2 items to center cleanly */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 max-w-4xl mx-auto">
+        {/* Adjusted grid logic for 3 items to center cleanly */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8 max-w-6xl mx-auto">
           {projects.map((proj, idx) => (
             <motion.div 
               key={idx}
