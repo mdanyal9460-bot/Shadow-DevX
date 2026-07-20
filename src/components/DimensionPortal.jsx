@@ -22,96 +22,90 @@ attribute float aLineIndex;
 varying vec3 vColor;
 
 void main() {
-    vColor = aColor;
-    
     vec3 pos = vec3(0.0);
     
-    // Smooth transition logic based on uProgress (0.0 -> 1.0 -> 2.0)
-    // 0.0 -> 1.0: Orb to Vortex
-    // 1.0 -> 2.0: Vortex to Text
+    // Phase 1: 0.0 -> 0.4: First Boom Scatter & Vortex
+    float firstBoomTiming = smoothstep(0.0, 0.2, uProgress) * smoothstep(0.4, 0.2, uProgress);
+    float pVortex = smoothstep(0.0, 0.4, uProgress);
     
-    if (uProgress < 1.0) {
-        float p = smoothstep(0.0, 1.0, uProgress);
-        
-        // Breathing Orb
-        vec3 breathingOrb = aPosOrb * (1.0 + sin(uTime * 2.0 + aPosOrb.y) * 0.05);
-        
-        // Swirling Vortex
-        float angle = atan(aPosVortex.z, aPosVortex.x) + uTime * 3.0;
-        float radius = length(aPosVortex.xz);
-        vec3 swirlingVortex = vec3(cos(angle) * radius, aPosVortex.y, sin(angle) * radius);
-        
-        pos = mix(breathingOrb, swirlingVortex, p);
-        
-        // Color transition (Crimson -> Void Purple)
-        vec3 targetColor = mix(vec3(1.0, 0.0, 0.0), vec3(0.1, 0.0, 0.2), p); 
-        vColor = mix(vColor, targetColor, p * 0.8);
-        
-    } else {
-        // Sequential Lock-in Logic
-        // Line 1: Welcome (uProgress 1.0 to 1.4 - Instant Lock)
-        float pLine1 = smoothstep(0.0, 0.4, uProgress - 1.0);
-        
-        // Line 2: Atomic (uProgress 1.6 to 2.2)
-        float pLine2 = smoothstep(0.6, 1.2, uProgress - 1.0);
-        
-        float pActive = mix(pLine1, pLine2, aLineIndex);
-        
-        // Swirling Vortex (maintain motion)
-        float angle = atan(aPosVortex.z, aPosVortex.x) + uTime * 3.0;
-        float radius = length(aPosVortex.xz);
-        vec3 swirlingVortex = vec3(cos(angle) * radius, aPosVortex.y, sin(angle) * radius);
-        
-        // Text Position (Microscopic Living Dark Energy Breathing)
-        vec3 textPos = aPosText;
-        float breathingScale = 0.04; 
-        textPos.x += sin(uTime * 2.0 + textPos.y * 10.0) * breathingScale;
-        textPos.y += cos(uTime * 2.5 + textPos.x * 10.0) * breathingScale;
-        textPos.z += sin(uTime * 1.5 + textPos.x * 5.0) * (breathingScale * 2.0);
-        
-        // The BOOM mathematical explosion for Line 2
-        float boom = 0.0;
-        if (aLineIndex > 0.5) {
-            float progress = uProgress - 1.0;
-            float boomTiming = smoothstep(0.35, 0.5, progress) * smoothstep(0.85, 0.7, progress);
-            boom = boomTiming; 
-            
-            float noise = sin(aPosText.x * 50.0) * 15.0;
-            float hash = fract(sin(dot(aPosText.xyz, vec3(12.9898, 78.233, 45.164))) * 43758.5453);
-            vec3 chaosDir = normalize(vec3(hash - 0.5, fract(hash * 2.0) - 0.5, fract(hash * 3.0) - 0.5));
-            textPos += chaosDir * boom * abs(noise); 
-        }
-        
-        // Mouse Repulsion Logic & Fracture
-        float dist = distance(textPos.xy, uMouse);
-        if (dist < 3.0) {
-            vec2 dir = normalize(textPos.xy - uMouse);
-            textPos.xy += dir * (3.0 - dist) * 0.5;
-            textPos.z += (3.0 - dist) * 0.5;
-        }
-        
-        float fractureEffect = smoothstep(30.0, 100.0, uPointerSpeed);
-        if (fractureEffect > 0.0 && dist < 8.0) {
-            float hash = fract(sin(dot(aPosText.xyz, vec3(12.9898, 78.233, 45.164))) * 43758.5453);
-            vec3 chaosDir = normalize(vec3(hash - 0.5, fract(hash * 2.0) - 0.5, fract(hash * 3.0) - 0.5));
-            textPos += chaosDir * fractureEffect * (8.0 - dist) * 1.5;
-        }
-        
-        pos = mix(swirlingVortex, textPos, pActive);
-        
-        // Color transition
-        vec3 textColor = mix(vec3(1.0, 0.0, 0.0), vec3(1.0, 0.26, 0.26), (sin(textPos.x * 0.5 + uTime) + 1.0) * 0.5);
-        vColor = mix(vec3(0.1, 0.0, 0.2), textColor, pActive);
+    // Breathing Orb
+    vec3 breathingOrb = aPosOrb * (1.0 + sin(uTime * 2.0 + aPosOrb.y) * 0.05);
+    
+    // Swirling Vortex
+    float angle = atan(aPosVortex.z, aPosVortex.x) + uTime * 3.0;
+    float radius = length(aPosVortex.xz);
+    vec3 swirlingVortex = vec3(cos(angle) * radius, aPosVortex.y, sin(angle) * radius);
+    
+    // Text Position (Microscopic Living Dark Energy Breathing)
+    vec3 textPos = aPosText;
+    float breathingScale = 0.04; 
+    textPos.x += sin(uTime * 2.0 + textPos.y * 10.0) * breathingScale;
+    textPos.y += cos(uTime * 2.5 + textPos.x * 10.0) * breathingScale;
+    textPos.z += sin(uTime * 1.5 + textPos.x * 5.0) * (breathingScale * 2.0);
+
+    // Initial state (Orb -> Vortex)
+    vec3 basePos = mix(breathingOrb, swirlingVortex, pVortex);
+    
+    // First Boom Chaos (affects everything)
+    float hash1 = fract(sin(dot(aPosOrb.xyz, vec3(12.9898, 78.233, 45.164))) * 43758.5453);
+    vec3 chaos1 = normalize(vec3(hash1 - 0.5, fract(hash1 * 2.0) - 0.5, fract(hash1 * 3.0) - 0.5));
+    basePos += chaos1 * firstBoomTiming * 10.0;
+    
+    // Phase 1: Line 1 Lock (0.4 to 1.0)
+    float pLine1 = smoothstep(0.4, 1.0, uProgress);
+    
+    // Phase 4: Line 2 Lock (2.4 to 2.8) - Forms after the blast
+    float pLine2 = smoothstep(2.4, 2.8, uProgress);
+    
+    float pActive = mix(pLine1, pLine2, aLineIndex);
+    
+    // Phase 3: Second Boom for Line 2 (2.0 to 2.4)
+    float secondBoomTiming = 0.0;
+    if (aLineIndex > 0.5) {
+        secondBoomTiming = smoothstep(2.0, 2.2, uProgress) * smoothstep(2.5, 2.2, uProgress);
+        float noise = sin(aPosText.x * 50.0) * 15.0;
+        float hash2 = fract(sin(dot(aPosText.xyz, vec3(12.9898, 78.233, 45.164))) * 43758.5453);
+        vec3 chaos2 = normalize(vec3(hash2 - 0.5, fract(hash2 * 2.0) - 0.5, fract(hash2 * 3.0) - 0.5));
+        textPos += chaos2 * secondBoomTiming * abs(noise) * 2.0; // Aggressive displacement
     }
+    
+    // Interaction logic
+    float dist = distance(textPos.xy, uMouse);
+    if (dist < 3.0) {
+        vec2 dir = normalize(textPos.xy - uMouse);
+        textPos.xy += dir * (3.0 - dist) * 0.5;
+        textPos.z += (3.0 - dist) * 0.5;
+    }
+    float fractureEffect = smoothstep(30.0, 100.0, uPointerSpeed);
+    if (fractureEffect > 0.0 && dist < 8.0) {
+        float hash3 = fract(sin(dot(aPosText.xyz, vec3(12.9898, 78.233, 45.164))) * 43758.5453);
+        vec3 chaos3 = normalize(vec3(hash3 - 0.5, fract(hash3 * 2.0) - 0.5, fract(hash3 * 3.0) - 0.5));
+        textPos += chaos3 * fractureEffect * (8.0 - dist) * 1.5;
+    }
+    
+    pos = mix(basePos, textPos, pActive);
+    
+    // Color Logic
+    vec3 targetColor = mix(aColor, vec3(0.1, 0.0, 0.2), pVortex);
+    vec3 finalTextColor = mix(vec3(1.0, 0.0, 0.0), vec3(1.0, 0.26, 0.26), (sin(textPos.x * 0.5 + uTime) + 1.0) * 0.5);
+    vec3 baseColor = mix(targetColor, finalTextColor, pActive);
+    
+    // Phase 3: Flash extreme white/neon red during second boom
+    if (aLineIndex > 0.5) {
+        baseColor = mix(baseColor, vec3(1.0, 0.9, 0.9), secondBoomTiming);
+    }
+    vColor = baseColor;
     
     vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
-    // Dynamic point size scaling by distance, time, and boom explosion
-    float boomFactor = 0.0;
+    
+    // Point Size logic
+    float pSize = uBasePointSize;
+    pSize += firstBoomTiming * 15.0; // First explosion size spike
     if (aLineIndex > 0.5) {
-        float progress = max(0.0, uProgress - 1.0);
-        boomFactor = smoothstep(0.35, 0.5, progress) * smoothstep(0.85, 0.7, progress);
+        pSize += secondBoomTiming * 50.0; // Second explosion massive spike
     }
-    gl_PointSize = (uBasePointSize / -mvPosition.z) * (1.0 + sin(uTime * 3.0 + pos.x) * 0.2) + (boomFactor * 40.0);
+    
+    gl_PointSize = (pSize / -mvPosition.z) * (1.0 + sin(uTime * 3.0 + pos.x) * 0.2);
     gl_Position = projectionMatrix * mvPosition;
 }
 `;
@@ -250,8 +244,8 @@ export default function DimensionPortal({ isOpen = false }) {
   }), []);
 
   useEffect(() => {
-    // 0 = Orb, 1 = Vortex, 1.0-1.5 = Line 1, 1.8-2.5 = Line 2
-    targetProgress.current = isOpen ? 2.5 : 0.0;
+    // Phase 1: 0.0-1.0, Phase 2: Pause 1.0-2.0, Phase 3: Boom 2.0-2.4, Phase 4: Lock 2.4-2.8
+    targetProgress.current = isOpen ? 3.0 : 0.0;
   }, [isOpen]);
 
   useFrame((state, delta) => {
@@ -261,21 +255,29 @@ export default function DimensionPortal({ isOpen = false }) {
     // Time
     mat.uniforms.uTime.value = state.clock.elapsedTime;
     
-    // Smooth transition (Sweet Spot)
-    mat.uniforms.uProgress.value = THREE.MathUtils.lerp(
-      mat.uniforms.uProgress.value,
-      targetProgress.current,
-      delta * 0.9 // Sweet Spot Morph speed for physical weight
-    );
-    
-    // Camera Shake during BOOM phase
-    if (mat.uniforms.uProgress.value > 1.4 && mat.uniforms.uProgress.value < 1.8) {
-      const shakeAmount = Math.sin(state.clock.elapsedTime * 80) * 0.5;
-      state.camera.position.x = shakeAmount;
-      state.camera.position.y = Math.cos(state.clock.elapsedTime * 75) * 0.5;
+    // Linear transition for exact suspense pacing
+    if (targetProgress.current > 0) {
+      mat.uniforms.uProgress.value = Math.min(3.0, mat.uniforms.uProgress.value + delta * 0.6);
     } else {
-      state.camera.position.x = THREE.MathUtils.lerp(state.camera.position.x, 0, 0.3); // Fast recovery snap
-      state.camera.position.y = THREE.MathUtils.lerp(state.camera.position.y, 0, 0.3);
+      mat.uniforms.uProgress.value = Math.max(0.0, mat.uniforms.uProgress.value - delta * 0.6);
+    }
+    
+    const prog = mat.uniforms.uProgress.value;
+    
+    // Phase 1: First scatter shake (Subtle)
+    if (prog > 0.05 && prog < 0.3) {
+      state.camera.position.x = Math.sin(state.clock.elapsedTime * 60) * 0.2;
+      state.camera.position.y = Math.cos(state.clock.elapsedTime * 55) * 0.2;
+    }
+    // Phase 3: Second massive boom shake (Heavy)
+    else if (prog > 2.05 && prog < 2.35) {
+      state.camera.position.x = Math.sin(state.clock.elapsedTime * 100) * 0.6;
+      state.camera.position.y = Math.cos(state.clock.elapsedTime * 95) * 0.6;
+    } 
+    // Recovery
+    else {
+      state.camera.position.x = THREE.MathUtils.lerp(state.camera.position.x, 0, 0.2);
+      state.camera.position.y = THREE.MathUtils.lerp(state.camera.position.y, 0, 0.2);
     }
     
     // Mouse Interaction & Speed Tracking
